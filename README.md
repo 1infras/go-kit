@@ -18,8 +18,14 @@ This repository will help you build a Golang microservices project faster and op
 
 ### Go Module Private
 
-- If you meet any error when fetch this repository, please add
+If you meet any error when fetch this repository, please add
 
 ```bash
 export GOPRIVATE="gitlab.id.vin/devops"
+```
+
+Set git config:
+
+```bash
+git config --global url."git@gitlab.id.vin:".insteadOf "https://gitlab.id.vin"
 ```
