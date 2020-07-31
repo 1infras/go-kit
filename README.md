@@ -30,6 +30,17 @@ Set git config:
 git config --global url."git@gitlab.id.vin:".insteadOf "https://gitlab.id.vin"
 ```
 
+In case you haven't allow to do set git config, you could add these line into your `.gitconfig`:
+
+```shell
+vim ~/.gitconfig
+#Add these lines to the end
+[url "git@gitlab.id.vin:"]
+insteadOf = https://gitlab.id.vin/
+
+#Save with ESC and :wq!
+```
+
 Example to download this module:
 
 ```shell
