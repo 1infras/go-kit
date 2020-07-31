@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"context"
 	"fmt"
+	"gitlab.id.vin/devops/go-kit/src/cmd/logger"
 	"net/http"
 
 	"github.com/olivere/elastic"
