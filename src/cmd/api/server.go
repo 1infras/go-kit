@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -18,7 +18,6 @@ import (
 var (
 	httpPort   = flag.Int("http-port", 8888, "http-port")
 	logLevel   = flag.Int("log-level", logger.DebugLevel, "log-level")
-	bin        = flag.String("bin", ".", "bin")
 	configFile = flag.String("config", "config.yml", "config")
 )
 
@@ -36,14 +35,9 @@ func initLogger() {
 }
 
 func initConfig() {
-	//Init viper to read config
-	p, err := filepath.Abs(*bin)
-	if err != nil {
-		panic(err)
-	}
-	f := filepath.Join(p, *configFile)
-	err = config.InitViper(f)
-	if err != nil {
+	//load config with viper
+	paths := strings.Split(*configFile, ",")
+	if err := config.LoadConfigFilesByViper(paths); err != nil {
 		panic(err)
 	}
 }
@@ -96,7 +90,7 @@ func (s *Server) Run() {
 		ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
 
 		//A interrupt signal has sent to us, let's shutdown server with gracefully
-		logger.Infof("Stopping server...")
+		logger.Info("Stopping server...")
 
 		if err := h.Shutdown(ctx); err != nil {
 			logger.Errorf("Graceful shutdown has failed with error: %s", err)
@@ -105,7 +99,7 @@ func (s *Server) Run() {
 	}()
 
 	go func() {
-		logger.Info(nil, fmt.Sprintf("Starting: %v listen server on port %d", s.Name, s.HTTPPort))
+		logger.Infof("Starting: %v listen server on port %d", s.Name, s.HTTPPort)
 		if err := h.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Errorf("Run server has failed with error: %s", err)
 			//Exit the application if run fail
