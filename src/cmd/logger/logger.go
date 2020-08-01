@@ -136,51 +136,51 @@ func Panict(ctx context.Context, message string, fields ...zap.Field) {
 //Logger with format
 //Info with format
 func Infof(message string, args ...interface{}) {
-	zap.S().Infof(message, args)
+	zap.S().Infof(message, args...)
 }
 
 //Warn with format
 func Warnf(message string, args ...interface{}) {
-	zap.S().Warnf(message, args)
+	zap.S().Warnf(message, args...)
 }
 
 //Error with format
 func Errorf(message string, args ...interface{}) {
-	zap.S().Errorf(message, args)
+	zap.S().Errorf(message, args...)
 }
 
 //Debug with format
 func Debugf(message string, args ...interface{}) {
-	zap.S().Debugf(message, args)
+	zap.S().Debugf(message, args...)
 }
 
 //Panic with format
 func Panicf(message string, args ...interface{}) {
-	zap.S().Panicf(message, args)
+	zap.S().Panicf(message, args...)
 }
 
 //Logging with sugared
 //Info with sugared
 func Infow(message string, keyAndValues ...interface{}) {
-	zap.S().Infow(message, keyAndValues)
+	zap.S().Infow(message, keyAndValues...)
 }
 
 //Warn with sugared
 func Warnw(message string, keyAndValues ...interface{}) {
-	zap.S().Warnw(message, keyAndValues)
+	zap.S().Warnw(message, keyAndValues...)
 }
 
 //Error with sugared
 func Errorw(message string, keyAndValues ...interface{}) {
-	zap.S().Errorw(message, keyAndValues)
+	zap.S().Errorw(message, keyAndValues...)
 }
 
 //Debug with sugared
 func Debugw(message string, keyAndValues ...interface{}) {
-	zap.S().Debugw(message, keyAndValues)
+	zap.S().Debugw(message, keyAndValues...)
 }
 
 //Panic with sugared
 func Panicw(message string, keyAndValues ...interface{}) {
-	zap.S().Panicw(message, keyAndValues)
+	zap.S().Panicw(message, keyAndValues...)
 }
