@@ -81,62 +81,106 @@ func apmTraceContextWrapper(ctx context.Context) []zapcore.Field {
 	return apmzap.TraceContext(context.Background())
 }
 
-func Info(ctx context.Context, message string, fields ...zap.Field) {
+//Normal Logging
+//Info
+func Info(message string) {
+	zap.L().Info(message)
+}
+
+//Warn
+func Warn(message string) {
+	zap.L().Warn(message)
+}
+
+//Error
+func Error(message string) {
+	zap.L().Error(message)
+}
+
+//Panic
+func Panic(message string) {
+	zap.L().Panic(message)
+}
+
+//Debug
+func Debug(message string) {
+	zap.L().Debug(message)
+}
+
+//Logging with APM tracing
+//Info with APM tracing
+func Infot(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Info(message, fields...)
 }
 
-func Infow(message string, keyAndValues ...interface{}) {
-	zap.S().Infow(message, keyAndValues)
+//Warn with APM tracing
+func Warnt(ctx context.Context, message string, fields ...zap.Field) {
+	zap.L().With(apmTraceContextWrapper(ctx)...).Warn(message, fields...)
 }
 
+//Error with APM tracing
+func Errort(ctx context.Context, message string, fields ...zap.Field) {
+	zap.L().With(apmTraceContextWrapper(ctx)...).Error(message, fields...)
+}
+
+//Debug with APM tracing
+func Debugt(ctx context.Context, message string, fields ...zap.Field) {
+	zap.L().With(apmTraceContextWrapper(ctx)...).Debug(message, fields...)
+}
+
+//Panic with APM tracing
+func Panict(ctx context.Context, message string, fields ...zap.Field) {
+	zap.L().With(apmTraceContextWrapper(ctx)...).Panic(message, fields...)
+}
+
+//Logger with format
+//Info with format
 func Infof(message string, args ...interface{}) {
 	zap.S().Infof(message, args)
 }
 
-func Warn(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Warn(message, fields...)
-}
-
-func Warnw(message string, keyAndValues ...interface{}) {
-	zap.S().Warnw(message, keyAndValues)
-}
-
+//Warn with format
 func Warnf(message string, args ...interface{}) {
 	zap.S().Warnf(message, args)
 }
 
-func Debug(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Debug(message, fields...)
-}
-
-func Debugw(message string, keyAndValues ...interface{}) {
-	zap.S().Debugw(message, keyAndValues)
-}
-
-func Debugf(message string, args ...interface{}) {
-	zap.S().Debugf(message, args)
-}
-
-func Error(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Error(message, fields...)
-}
-
-func Errorw(message string, keyAndValues ...interface{}) {
-	zap.S().Errorw(message, keyAndValues)
-}
-
+//Error with format
 func Errorf(message string, args ...interface{}) {
 	zap.S().Errorf(message, args)
 }
 
-func Panic(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Panic(message, fields...)
+//Debug with format
+func Debugf(message string, args ...interface{}) {
+	zap.S().Debugf(message, args)
 }
 
-func Panicw(message string, keyAndValues ...interface{}) {
-	zap.S().Panicw(message, keyAndValues)
-}
-
+//Panic with format
 func Panicf(message string, args ...interface{}) {
 	zap.S().Panicf(message, args)
+}
+
+//Logging with sugared
+//Info with sugared
+func Infow(message string, keyAndValues ...interface{}) {
+	zap.S().Infow(message, keyAndValues)
+}
+
+//Warn with sugared
+func Warnw(message string, keyAndValues ...interface{}) {
+	zap.S().Warnw(message, keyAndValues)
+}
+
+//Error with sugared
+func Errorw(message string, keyAndValues ...interface{}) {
+	zap.S().Errorw(message, keyAndValues)
+}
+
+//Debug with sugared
+func Debugw(message string, keyAndValues ...interface{}) {
+	zap.S().Debugw(message, keyAndValues)
+}
+
+//Panic with sugared
+func Panicw(message string, keyAndValues ...interface{}) {
+	zap.S().Panicw(message, keyAndValues)
 }
