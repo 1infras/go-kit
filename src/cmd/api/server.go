@@ -99,7 +99,7 @@ func (s *Server) Run() {
 	}()
 
 	go func() {
-		logger.Infof("Starting: %v listen server on port %d", s.Name, s.HTTPPort)
+		logger.Infof("Starting: %v listen server on port %v", s.Name, s.HTTPPort)
 		if err := h.ListenAndServe(); err != http.ErrServerClosed {
 			logger.Errorf("Run server has failed with error: %s", err)
 			//Exit the application if run fail
