@@ -2,12 +2,13 @@ package config
 
 import (
 	"bytes"
-	"github.com/spf13/viper"
-	"gitlab.id.vin/devops/go-kit/src/cmd/logger"
-	"gitlab.id.vin/devops/go-kit/src/cmd/util/file_utils"
 	"io"
 	"io/ioutil"
 	"strings"
+
+	"github.com/spf13/viper"
+	"gitlab.id.vin/devops/go-kit/src/cmd/logger"
+	"gitlab.id.vin/devops/go-kit/src/cmd/util/file_utils"
 )
 
 //Read config by viper (support merge multiple config keys)
@@ -54,6 +55,8 @@ func LoadConfigFilesByViper(configFilePaths []string) error {
 
 		logger.Infof("Loaded config from config file: %v", filePath)
 	}
+
+	viper.AutomaticEnv()
 
 	return nil
 }
