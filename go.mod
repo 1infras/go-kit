@@ -1,4 +1,4 @@
-module gitlab.id.vin/devops/go-kit
+module github.com/1infras/go-kit
 
 go 1.13
 

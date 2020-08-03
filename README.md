@@ -16,33 +16,13 @@ This repository will help you build a Golang microservices project faster and op
 
 ## Usages
 
-### Go Module Private
-
-If you meet any error when fetching this repository, please add
-
 ```shell
-export GOPRIVATE="gitlab.id.vin/devops"
+go get -u https://github.com/1infras/go-kit
 ```
 
-Set git config:
+## Contributors
+[![](https://github.com/ducmeit1.png?size=50)](https://github.com/ducmeit1)
 
-```shell
-git config --global url."git@gitlab.id.vin:".insteadOf "https://gitlab.id.vin"
-```
+## Licensed
 
-In case you haven't allow to do set git config, you could add these line into your `.gitconfig`:
-
-```shell
-vim ~/.gitconfig
-#Add these lines to the end
-[url "git@gitlab.id.vin:"]
-insteadOf = https://gitlab.id.vin/
-
-#Save with ESC and :wq!
-```
-
-Example to download this module:
-
-```shell
-go get -u gitlab.id.vin/devops/go-kit@v0.1.1
-```
+This repository belongs to 1Infras project of 1MG (One Mount Group)
