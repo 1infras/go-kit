@@ -6,9 +6,9 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/1infras/go-kit/src/cmd/logger"
+	"github.com/1infras/go-kit/src/cmd/util/file_utils"
 	"github.com/spf13/viper"
-	"gitlab.id.vin/devops/go-kit/src/cmd/logger"
-	"gitlab.id.vin/devops/go-kit/src/cmd/util/file_utils"
 )
 
 //Read config by viper (support merge multiple config keys)

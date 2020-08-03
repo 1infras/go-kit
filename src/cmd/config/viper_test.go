@@ -1,8 +1,8 @@
 package config
 
 import (
+	"github.com/1infras/go-kit/src/cmd/logger"
 	"github.com/spf13/viper"
-	"gitlab.id.vin/devops/go-kit/src/cmd/logger"
 	"testing"
 )
 
