@@ -18,7 +18,7 @@ import (
 
 var (
 	httpPort   = flag.Int("http-port", 8888, "http-port")
-	logLevel   = flag.Int("log-level", logger.DebugLevel, "log-level")
+	logLevel   = flag.String("log-level", "debug", "log-level")
 	configFile = flag.String("config", "config.yml", "config")
 	configType = flag.String("config-type", "yaml", "config-type")
 	skipConfig = flag.Bool("skip-config", false, "skip-read-config")
@@ -34,7 +34,7 @@ func init() {
 }
 
 func initLogger() {
-	logger.InitLogger(*logLevel)
+	logger.InitLogger(logger.LogLevel(*logLevel))
 }
 
 func initConfig() {

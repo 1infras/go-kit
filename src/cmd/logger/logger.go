@@ -9,19 +9,22 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+//LogLevel -
+type LogLevel string
+
 const (
-	//PanicLevel - Lowest level is panic
-	PanicLevel int = iota
-	//FatalLevel - Lowest level is fatal
-	FatalLevel
-	//ErrorLevel - Lowest level is error
-	ErrorLevel
-	//WarnLevel - Lowest level is warn
-	WarnLevel
-	//InfoLevel - Lowest level is info
-	InfoLevel
-	//DebugLevel - Lowest level is debug
-	DebugLevel
+	//Panic -
+	PanicLevel LogLevel = "panic"
+	//Fatal -
+	FatalLevel = "fatal"
+	//Error -
+	ErrorLevel = "error"
+	//Warn -
+	WarnLevel = "warn"
+	//Info -
+	InfoLevel = "info"
+	//Debug -
+	DebugLevel = "debug"
 )
 
 var (
@@ -30,7 +33,7 @@ var (
 )
 
 //GetLogLevel - Transform logger level to zapcore level
-func GetLogLevel(lvl int) zapcore.Level {
+func GetLogLevel(lvl LogLevel) zapcore.Level {
 	zapLevel := zap.DebugLevel
 
 	switch lvl {
@@ -52,7 +55,7 @@ func GetLogLevel(lvl int) zapcore.Level {
 }
 
 //InitLogger - Init a logger with logger level
-func InitLogger(lvl int) {
+func InitLogger(lvl LogLevel) {
 	syncOne.Do(func() {
 		zapLevel := GetLogLevel(lvl)
 		logger, err := zap.Config{
