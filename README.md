@@ -12,6 +12,7 @@ This repository will help you build a Golang microservices project faster and op
     - Elastic APM (Elastic Application Performance Monitoring)
     - OpenTracing (Tracing)
     - ElasticSearch (DocumentDB)
+    - Redis (Multiple client)
     - Viper (Read application configuration)
 
 ## Usages
