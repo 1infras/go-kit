@@ -38,23 +38,24 @@ func (h *ExampleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func onClose() {}
 
 func main() {
+    //Create a new HTTP Server with name and close function to callback when closing the server
     s := NewServer("test_server", onClose)
 
     routes := transport.Transport{
-        PathPrefix: "/api/v1",
+        PathPrefix: "/api/v1", //Set path prefix for every route
         Routes: []transport.Route{
             {
-                Path: "/",
-                Method: "GET",
-                Handler: &ExampleHandler{
+                Path: "/", //Path
+                Method: "GET", //HTTP Method
+                Handler: &ExampleHandler{ //HTTP Handler
                     Foo: "bar"
                 }
             },
         },
     }
-
-    s.AddRoutes(routes}
-
+    //Adding routes to transport
+    s.AddRoutes(routes)
+    //Starting run HTTP Server
     s.Run()
 }
 ```
@@ -62,6 +63,15 @@ func main() {
 Run with:
 ```shell
 go run main.go -http-port=8080 -log-level=debug -skip-config=true
+```
+
+Verify with:
+```shell
+curl -X GET http://localhost:8080/health
+```
+or
+```shell
+curl -X GET http://localhost:8080/api/v1
 ```
 
 ## Contributors
