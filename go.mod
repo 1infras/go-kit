@@ -11,7 +11,6 @@ require (
 	github.com/olivere/elastic v6.2.34+incompatible
 	github.com/spf13/viper v1.7.0
 	github.com/urfave/negroni v1.0.0
-	go.elastic.co/apm v1.8.0
 	go.elastic.co/apm/module/apmelasticsearch v1.8.0
 	go.elastic.co/apm/module/apmgorilla v1.8.0
 	go.elastic.co/apm/module/apmzap v1.8.0
