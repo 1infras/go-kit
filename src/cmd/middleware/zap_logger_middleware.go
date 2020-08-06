@@ -1,17 +1,18 @@
 package middleware
 
 import (
-	"go.elastic.co/apm"
-	"go.uber.org/zap"
 	"net/http"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 const timeFormat = time.RFC3339
 
+//ZapLoggerMiddleware -
 type ZapLoggerMiddleware struct{}
 
-// New Zap Logger Middleware to trace your HTTP request
+//NewZapLoggerMiddleware - New a logger middleware to trace the HTTP request
 func NewZapLoggerMiddleware() *ZapLoggerMiddleware {
 	return &ZapLoggerMiddleware{}
 }
@@ -25,8 +26,7 @@ func (m *ZapLoggerMiddleware) ServeHTTP(rw http.ResponseWriter, r *http.Request,
 	end := time.Now()
 	//Calculate Latency
 	latency := end.Sub(start)
-	span, _ := apm.StartSpan(r.Context(), "logger", "custom")
-	defer span.End()
+
 	//Log the result
 	zap.L().Info(r.URL.Path,
 		zap.String("host", r.Host),

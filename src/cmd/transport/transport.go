@@ -1,20 +1,23 @@
 package transport
 
 import (
+	"io"
+	"net/http"
+
 	"github.com/1infras/go-kit/src/cmd/logger"
 	"github.com/1infras/go-kit/src/cmd/middleware"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"go.elastic.co/apm/module/apmgorilla"
-	"io"
-	"net/http"
 )
 
+//Transport - A collection routes with path prefix for transport
 type Transport struct {
 	PathPrefix string
 	Routes     []Route
 }
 
+//Route - Route configuration
 type Route struct {
 	Path       string
 	Method     string
@@ -22,7 +25,7 @@ type Route struct {
 	Middleware []http.Handler
 }
 
-//Add New HTTP Router
+//NewRouter - Add New HTTP Router
 func NewRouter(transport Transport) *mux.Router {
 	r := mux.NewRouter().StrictSlash(false)
 	apmgorilla.Instrument(r)

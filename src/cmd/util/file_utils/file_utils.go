@@ -1,10 +1,11 @@
-package file_utils
+package fileutils
 
 import (
 	"fmt"
 	"os"
 )
 
+//ReadLocalFile - Read a local file with file path
 func ReadLocalFile(fileName string) ([]byte, error) {
 	f, err := os.Open(fileName)
 	if err != nil {

@@ -5,12 +5,12 @@ import (
 	"net/http"
 )
 
-// Return HTTP 200 with OKJson encoding for a mapping
+//OK - Return HTTP 200
 func OK(w http.ResponseWriter) {
 	w.WriteHeader(http.StatusOK)
 }
 
-// Return HTTP 200 with OKJson encoding
+//OKJson - Return HTTP 200 with Json encoding
 func OKJson(w http.ResponseWriter, message interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	b, _ := json.Marshal(message)
@@ -18,7 +18,7 @@ func OKJson(w http.ResponseWriter, message interface{}) {
 	w.Write(b)
 }
 
-// Return HTTP 400
+//BadRequest - Return HTTP 400
 func BadRequest(w http.ResponseWriter, message map[string]interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	b, _ := json.Marshal(message)
@@ -26,7 +26,7 @@ func BadRequest(w http.ResponseWriter, message map[string]interface{}) {
 	w.Write(b)
 }
 
-// Return HTTP 500 with OKJson
+//BadRequestJson - Return HTTP 500 with Json
 func BadRequestJson(w http.ResponseWriter, message interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	b, _ := json.Marshal(message)
@@ -34,7 +34,7 @@ func BadRequestJson(w http.ResponseWriter, message interface{}) {
 	w.Write(b)
 }
 
-// Return HTTP 500
+//InternalServerError - Return HTTP 500
 func InternalServerError(w http.ResponseWriter) {
 	w.Header().Set("Content-Type", "application/json")
 	b, _ := json.Marshal(map[string]interface{}{
@@ -44,10 +44,18 @@ func InternalServerError(w http.ResponseWriter) {
 	w.Write(b)
 }
 
-// Return HTTP 500 with OKJson
+//InternalServerErrorJson - Return HTTP 500 with Json
 func InternalServerErrorJson(w http.ResponseWriter, message interface{}) {
 	w.Header().Set("Content-Type", "application/json")
 	b, _ := json.Marshal(message)
 	w.WriteHeader(http.StatusInternalServerError)
+	w.Write(b)
+}
+
+//CustomJson - Return a HTTP Status Code with Json
+func CustomJson(w http.ResponseWriter, statusCode int, message interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	b, _ := json.Marshal(message)
+	w.WriteHeader(statusCode)
 	w.Write(b)
 }
