@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/1infras/go-kit/src/cmd/database/elasticsearch"
 	"net/http"
 	"os"
 	"os/signal"
@@ -31,6 +32,8 @@ func init() {
 	initLogger()
 	//Init config
 	initConfig()
+	//Init tracing
+	initTracing()
 }
 
 func initLogger() {
@@ -43,6 +46,14 @@ func initConfig() {
 		if err := config.LoadConfigFilesByViper(paths, *configType); err != nil {
 			panic(err)
 		}
+	}
+}
+
+func initTracing() {
+	c := elasticsearch.APMConnectionWithViper()
+	if c.URL != "" && c.Active {
+		logger.Infof("Tracing with APM Server: %s, with service: %v, and environment: %v ", c.URL, c.ServiceName, c.Environment)
+		elasticsearch.APMEnvironment(c)
 	}
 }
 

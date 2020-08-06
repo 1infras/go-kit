@@ -3,6 +3,7 @@ package elasticsearch
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/viper"
 	"net/http"
 
 	"github.com/1infras/go-kit/src/cmd/logger"
@@ -18,7 +19,7 @@ type Connection struct {
 	URL         string `json:"url"`
 	Secure      bool   `json:"secure"`
 	APIKey      string `json:"api_key"`
-	EnableSniff bool   `json:"sniff"`
+	EnableSniff bool   `json:"enable_sniff"`
 }
 
 //RoundTrip - Wrap RoundTrip with APM ElasticSearch and adding API Key in header to authorization
@@ -28,6 +29,16 @@ func (c *Connection) RoundTrip(r *http.Request) (*http.Response, error) {
 	}
 
 	return apmelasticsearch.WrapRoundTripper(http.DefaultTransport).RoundTrip(r)
+}
+
+//ConnectionWithViper - Read conenction with viper
+func ConnectionWithViper() *Connection {
+	return &Connection{
+		URL:         viper.GetString("elasticsearch.url"),
+		Secure:      viper.GetBool("elasticsearch.secure"),
+		APIKey:      viper.GetString("elasticsearch.api_key"),
+		EnableSniff: viper.GetBool("enable_sniff"),
+	}
 }
 
 //NewElasticClient - New a elastic client with connection configured
