@@ -1,14 +1,15 @@
 package config
 
 import (
+	"testing"
+
 	"github.com/1infras/go-kit/src/cmd/logger"
 	"github.com/spf13/viper"
-	"testing"
 )
 
 func TestInitViper(t *testing.T) {
 	logger.InitLogger(logger.DebugLevel)
-	err := LoadConfigFilesByViper([]string{"config.yml"})
+	err := LoadConfigFilesByViper([]string{"config.yml"}, "yaml")
 	if err != nil {
 		t.Fatal(err)
 	}
