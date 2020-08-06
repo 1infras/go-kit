@@ -2,18 +2,25 @@ package logger
 
 import (
 	"context"
+	"sync"
+
 	"go.elastic.co/apm/module/apmzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"sync"
 )
 
 const (
+	//PanicLevel - Lowest level is panic
 	PanicLevel int = iota
+	//FatalLevel - Lowest level is fatal
 	FatalLevel
+	//ErrorLevel - Lowest level is error
 	ErrorLevel
+	//WarnLevel - Lowest level is warn
 	WarnLevel
+	//InfoLevel - Lowest level is info
 	InfoLevel
+	//DebugLevel - Lowest level is debug
 	DebugLevel
 )
 
@@ -22,6 +29,7 @@ var (
 	syncOne sync.Once
 )
 
+//GetLogLevel - Transform logger level to zapcore level
 func GetLogLevel(lvl int) zapcore.Level {
 	zapLevel := zap.DebugLevel
 
@@ -43,6 +51,7 @@ func GetLogLevel(lvl int) zapcore.Level {
 	return zapLevel
 }
 
+//InitLogger - Init a logger with logger level
 func InitLogger(lvl int) {
 	syncOne.Do(func() {
 		zapLevel := GetLogLevel(lvl)
@@ -81,106 +90,102 @@ func apmTraceContextWrapper(ctx context.Context) []zapcore.Field {
 	return apmzap.TraceContext(context.Background())
 }
 
-//Normal Logging
-//Info
+//Info -
 func Info(message string) {
 	zap.L().Info(message)
 }
 
-//Warn
+//Warn -
 func Warn(message string) {
 	zap.L().Warn(message)
 }
 
-//Error
+//Error -
 func Error(message string) {
 	zap.L().Error(message)
 }
 
-//Panic
+//Panic -
 func Panic(message string) {
 	zap.L().Panic(message)
 }
 
-//Debug
+//Debug -
 func Debug(message string) {
 	zap.L().Debug(message)
 }
 
-//Logging with APM tracing
-//Info with APM tracing
+//Infot - Info with APM tracing
 func Infot(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Info(message, fields...)
 }
 
-//Warn with APM tracing
+//Warnt - Warn with APM tracing
 func Warnt(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Warn(message, fields...)
 }
 
-//Error with APM tracing
+//Errort - Error with APM tracing
 func Errort(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Error(message, fields...)
 }
 
-//Debug with APM tracing
+//Debugt - Debug with APM tracing
 func Debugt(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Debug(message, fields...)
 }
 
-//Panic with APM tracing
+//Panict - Panic with APM tracing
 func Panict(ctx context.Context, message string, fields ...zap.Field) {
 	zap.L().With(apmTraceContextWrapper(ctx)...).Panic(message, fields...)
 }
 
-//Logger with format
-//Info with format
+//Infof - Info with format
 func Infof(message string, args ...interface{}) {
 	zap.S().Infof(message, args...)
 }
 
-//Warn with format
+//Warnf - Warn with format
 func Warnf(message string, args ...interface{}) {
 	zap.S().Warnf(message, args...)
 }
 
-//Error with format
+//Errorf - Error with format
 func Errorf(message string, args ...interface{}) {
 	zap.S().Errorf(message, args...)
 }
 
-//Debug with format
+//Debugf - Debug with format
 func Debugf(message string, args ...interface{}) {
 	zap.S().Debugf(message, args...)
 }
 
-//Panic with format
+//Panicf - Panic with format
 func Panicf(message string, args ...interface{}) {
 	zap.S().Panicf(message, args...)
 }
 
-//Logging with sugared
-//Info with sugared
+//Infow - Info with sugared
 func Infow(message string, keyAndValues ...interface{}) {
 	zap.S().Infow(message, keyAndValues...)
 }
 
-//Warn with sugared
+//Warnw - Warn with sugared
 func Warnw(message string, keyAndValues ...interface{}) {
 	zap.S().Warnw(message, keyAndValues...)
 }
 
-//Error with sugared
+//Errorw - Error with sugared
 func Errorw(message string, keyAndValues ...interface{}) {
 	zap.S().Errorw(message, keyAndValues...)
 }
 
-//Debug with sugared
+//Debugw - Debug with sugared
 func Debugw(message string, keyAndValues ...interface{}) {
 	zap.S().Debugw(message, keyAndValues...)
 }
 
-//Panic with sugared
+//Panicw - Panic with sugared
 func Panicw(message string, keyAndValues ...interface{}) {
 	zap.S().Panicw(message, keyAndValues...)
 }

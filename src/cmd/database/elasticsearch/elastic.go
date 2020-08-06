@@ -3,8 +3,9 @@ package elasticsearch
 import (
 	"context"
 	"fmt"
-	"github.com/1infras/go-kit/src/cmd/logger"
 	"net/http"
+
+	"github.com/1infras/go-kit/src/cmd/logger"
 
 	"github.com/olivere/elastic"
 	"go.elastic.co/apm/module/apmelasticsearch"
@@ -12,6 +13,7 @@ import (
 
 const DefaultElasticURL = "http://localhost:9200"
 
+//Connection - Config connection to ElasticSearch
 type Connection struct {
 	URL         string `json:"url"`
 	Secure      bool   `json:"secure"`
@@ -19,13 +21,16 @@ type Connection struct {
 	EnableSniff bool   `json:"sniff"`
 }
 
+//RoundTrip - Wrap RoundTrip with APM ElasticSearch and adding API Key in header to authorization
 func (c *Connection) RoundTrip(r *http.Request) (*http.Response, error) {
 	if c.Secure {
 		r.Header.Add("Authorization", fmt.Sprintf("ApiKey %v", c.APIKey))
 	}
+
 	return apmelasticsearch.WrapRoundTripper(http.DefaultTransport).RoundTrip(r)
 }
 
+//NewElasticClient - New a elastic client with connection configured
 func NewElasticClient(c *Connection) (*elastic.Client, error) {
 	if c.URL == "" {
 		return nil, fmt.Errorf("url of elasticsearch must not be empty")
@@ -56,6 +61,7 @@ func NewElasticClient(c *Connection) (*elastic.Client, error) {
 	return client, nil
 }
 
+//NewDefaultElasticClient - New a default elastic client with default URL
 func NewDefaultElasticClient() (*elastic.Client, error) {
 	return NewElasticClient(&Connection{
 		URL: DefaultElasticURL,

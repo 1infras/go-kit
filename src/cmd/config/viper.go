@@ -2,16 +2,22 @@ package config
 
 import (
 	"bytes"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"strings"
 
 	"github.com/1infras/go-kit/src/cmd/logger"
-	"github.com/1infras/go-kit/src/cmd/util/file_utils"
+	fileutils "github.com/1infras/go-kit/src/cmd/util/file_utils"
 	"github.com/spf13/viper"
 )
 
-//Read config by viper (support merge multiple config keys)
+var (
+	//SupportedConfigTypes - Config types allow to read
+	SupportedConfigTypes = []string{"json", "toml", "yaml"}
+)
+
+//ReadConfigByViper - Read config by viper (support merge multiple config files)
 func ReadConfigByViper(isMerge bool, values []byte) error {
 	reader := bytes.NewReader(values)
 	defer io.Copy(ioutil.Discard, reader)
@@ -22,15 +28,19 @@ func ReadConfigByViper(isMerge bool, values []byte) error {
 	return viper.ReadConfig(reader)
 }
 
-//Load config files by viper
-func LoadConfigFilesByViper(configFilePaths []string) error {
+//LoadConfigFilesByViper - Load config files by viper
+func LoadConfigFilesByViper(configFilePaths []string, configType string) error {
 	length := len(configFilePaths)
 	if length == 0 {
 		logger.Warnf("No config file paths have found, ignoring read configs...")
 		return nil
 	}
 
-	viper.SetConfigType("yaml")
+	if configType != "json" && configType != "toml" && configType != "yaml" {
+		return fmt.Errorf("config type must be is JSON/TOML/YAML")
+	}
+
+	viper.SetConfigType(configType)
 
 	for i := 0; i < length; i++ {
 		isMerge := i != 0
@@ -42,7 +52,7 @@ func LoadConfigFilesByViper(configFilePaths []string) error {
 			continue
 		}
 		//read content file
-		content, err := file_utils.ReadLocalFile(filePath)
+		content, err := fileutils.ReadLocalFile(filePath)
 		if err != nil {
 			return err
 		}

@@ -4,21 +4,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/1infras/go-kit/src/cmd/config"
-	"github.com/1infras/go-kit/src/cmd/logger"
-	"github.com/1infras/go-kit/src/cmd/transport"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/1infras/go-kit/src/cmd/config"
+	"github.com/1infras/go-kit/src/cmd/logger"
+	"github.com/1infras/go-kit/src/cmd/transport"
 )
 
 var (
 	httpPort   = flag.Int("http-port", 8888, "http-port")
 	logLevel   = flag.Int("log-level", logger.DebugLevel, "log-level")
 	configFile = flag.String("config", "config.yml", "config")
+	configType = flag.String("config-type", "yaml", "config-type")
+	skipConfig = flag.Bool("skip-config", false, "skip-read-config")
 )
 
 func init() {
@@ -35,13 +38,15 @@ func initLogger() {
 }
 
 func initConfig() {
-	//load config with viper
-	paths := strings.Split(*configFile, ",")
-	if err := config.LoadConfigFilesByViper(paths); err != nil {
-		panic(err)
+	if !*skipConfig {
+		paths := strings.Split(*configFile, ",")
+		if err := config.LoadConfigFilesByViper(paths, *configType); err != nil {
+			panic(err)
+		}
 	}
 }
 
+//Server - HTTP Server
 type Server struct {
 	Name      string
 	HTTPPort  int
@@ -49,6 +54,7 @@ type Server struct {
 	OnClose   func()
 }
 
+//NewServer - New a HTTP Server with name and close function when it's close
 func NewServer(name string, onClose func()) *Server {
 	return &Server{
 		Name:     name,
@@ -57,14 +63,17 @@ func NewServer(name string, onClose func()) *Server {
 	}
 }
 
+//AddRouter - Set a router for HTTP Server
 func (s *Server) AddRouter(transport transport.Transport) {
 	s.Transport = transport
 }
 
+//Close - Run close when HTTP Server is closed
 func (s *Server) Close() {
 	s.OnClose()
 }
 
+//Run - Listen and Serve HTTP Server
 func (s *Server) Run() {
 	//Add router
 	r := transport.NewRouter(s.Transport)
