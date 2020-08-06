@@ -38,24 +38,24 @@ func (h *ExampleHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func onClose() {}
 
 func main() {
-s := NewServer("test_server", onClose)
+    s := NewServer("test_server", onClose)
 
-routes := transport.Transport{
-    PathPrefix: "/api/v1",
-    Routes: []transport.Route{
-        {
-            Path: "/",
-            Method: "GET",
-            Handler: &ExampleHandler{
-                Foo: "bar"
-            }
+    routes := transport.Transport{
+        PathPrefix: "/api/v1",
+        Routes: []transport.Route{
+            {
+                Path: "/",
+                Method: "GET",
+                Handler: &ExampleHandler{
+                    Foo: "bar"
+                }
+            },
         },
-    },
-}
-  
-s.AddRoutes(routes}
+    }
 
-s.Run()
+    s.AddRoutes(routes}
+
+    s.Run()
 }
 ```
 
