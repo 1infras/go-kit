@@ -3,24 +3,22 @@ package redis
 import (
 	"context"
 	"fmt"
+	"github.com/spf13/viper"
+	"time"
 
 	"github.com/go-redis/redis"
 	"go.elastic.co/apm/module/apmgoredis"
 )
 
 const (
-	//RedisSingle -
-	RedisSingle = "single"
-	//RedisSentinel -
-	RedisSentinel = "sentinel"
-	//RedisCluster -
-	RedisCluster = "cluster"
 	//DefaultRedisAddress -
 	DefaultRedisAddress = "localhost:6379"
 	//DefaultMaxRetries -
 	DefaultMaxRetries = 3
 	//DefaultPoolSize -
 	DefaultPoolSize = 100
+	//DefaultRetryAfter
+	DefaultRetryAfter = 5 * time.Second
 )
 
 //Connection - Config connection to Redis
@@ -37,12 +35,19 @@ type Connection struct {
 	DB int `json:"db"`
 	//Max retries - Default is 3
 	MaxRetries int `json:"max_retries"`
-	// PoolSize - Default is 100
+	//PoolSize - Default is 100
 	PoolSize int `json:"pool_size"`
+	//RetryAfter - Default is 5 seconds
+	RetryAfter time.Duration `json:"retry_after"`
 }
 
 //ConfigWithDefault - Get Connection config with default
-func ConfigWithDefault(c *Connection) {
+func (c *Connection) Default() {
+	if c.Address == "" && len(c.Addresses) == 0 {
+		c.Address = DefaultRedisAddress
+		c.Addresses = []string{DefaultRedisAddress}
+	}
+
 	if c.MaxRetries <= 0 {
 		c.MaxRetries = DefaultMaxRetries
 	}
@@ -54,6 +59,27 @@ func ConfigWithDefault(c *Connection) {
 	if c.DB <= 0 {
 		c.DB = 0
 	}
+
+	if c.RetryAfter <= 0 {
+		c.RetryAfter = DefaultRetryAfter
+	}
+}
+
+func ConnectionWithViper() *Connection {
+	c := &Connection{
+		MasterName: viper.GetString("redis.master_name"),
+		Address:    viper.GetString("redis.address"),
+		Addresses:  viper.GetStringSlice("redis.addresses"),
+		Password:   viper.GetString("redis.password"),
+		DB:         viper.GetInt("redis.db"),
+		MaxRetries: viper.GetInt("redis.max_retries"),
+		PoolSize:   viper.GetInt("redis.pool_size"),
+		RetryAfter: viper.GetDuration("redis.retry_after"),
+	}
+
+	c.Default()
+
+	return c
 }
 
 //NewUniversalRedisClient - New a redis client base on configuration
@@ -80,9 +106,18 @@ func NewUniversalRedisClient(c *Connection) (redis.UniversalClient, error) {
 
 	client := redis.NewUniversalClient(options)
 
-	_, err := client.Ping().Result()
-	if err != nil {
-		return nil, err
+	retries := 0
+
+	for {
+		_, err := client.Ping().Result()
+		if err == nil {
+			break
+		}
+		if retries >= c.MaxRetries {
+			return nil, err
+		}
+		retries++
+		time.Sleep(c.RetryAfter)
 	}
 
 	return client, nil
@@ -101,9 +136,18 @@ func NewClusterRedisClient(c *Connection) (*redis.ClusterClient, error) {
 		PoolSize:   c.PoolSize,
 	})
 
-	_, err := client.Ping().Result()
-	if err != nil {
-		return nil, err
+	retries := 0
+
+	for {
+		_, err := client.Ping().Result()
+		if err == nil {
+			break
+		}
+		if retries >= c.MaxRetries {
+			return nil, err
+		}
+		retries++
+		time.Sleep(c.RetryAfter)
 	}
 
 	return client, nil
@@ -128,9 +172,18 @@ func NewSentinelRedisClient(c *Connection) (*redis.Client, error) {
 		PoolSize:      c.PoolSize,
 	})
 
-	_, err := client.Ping().Result()
-	if err != nil {
-		return nil, err
+	retries := 0
+
+	for {
+		_, err := client.Ping().Result()
+		if err == nil {
+			break
+		}
+		if retries >= c.MaxRetries {
+			return nil, err
+		}
+		retries++
+		time.Sleep(c.RetryAfter)
 	}
 
 	return client, nil
@@ -150,10 +203,20 @@ func NewSingleRedisClient(c *Connection) (*redis.Client, error) {
 		PoolSize:   c.PoolSize,
 	})
 
-	_, err := client.Ping().Result()
-	if err != nil {
-		return nil, err
+	retries := 0
+
+	for {
+		_, err := client.Ping().Result()
+		if err == nil {
+			break
+		}
+		if retries >= c.MaxRetries {
+			return nil, err
+		}
+		retries++
+		time.Sleep(c.RetryAfter)
 	}
+
 	return client, nil
 }
 
