@@ -9,15 +9,16 @@ require (
 	github.com/go-redis/redis v6.15.3-0.20190424063336-97e6ed817821+incompatible
 	github.com/google/go-cmp v0.5.1 // indirect
 	github.com/gorilla/mux v1.7.4
-	github.com/hashicorp/golang-lru v0.5.4
 	github.com/mailru/easyjson v0.7.2 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/olivere/elastic v6.2.34+incompatible
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/prometheus/procfs v0.1.3 // indirect
+	github.com/spf13/cast v1.3.0
 	github.com/spf13/viper v1.7.0
 	github.com/stretchr/testify v1.6.1 // indirect
 	github.com/urfave/negroni v1.0.0
+	go.elastic.co/apm v1.8.0
 	go.elastic.co/apm/module/apmelasticsearch v1.8.0
 	go.elastic.co/apm/module/apmgoredis v1.8.0
 	go.elastic.co/apm/module/apmgorilla v1.8.0

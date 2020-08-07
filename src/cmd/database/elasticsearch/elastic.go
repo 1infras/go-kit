@@ -42,7 +42,7 @@ func (c *Connection) RoundTrip(r *http.Request) (*http.Response, error) {
 	return apmelasticsearch.WrapRoundTripper(http.DefaultTransport).RoundTrip(r)
 }
 
-//DefaultConnection - Set a default connection
+//DefaultAPMConnection - Set a default connection
 func (c *Connection) Default() {
 	if c.URL == "" {
 		c.URL = DefaultElasticURL

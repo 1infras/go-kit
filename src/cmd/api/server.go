@@ -53,7 +53,7 @@ func initTracing() {
 	c := elasticsearch.APMConnectionWithViper()
 	if c.URL != "" && c.Active {
 		logger.Infof("Tracing with APM Server: %s, with service: %v, and environment: %v ", c.URL, c.ServiceName, c.Environment)
-		elasticsearch.APMEnvironment(c)
+		c.AutoBindEnvironment()
 	}
 }
 
