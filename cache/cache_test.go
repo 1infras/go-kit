@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"github.com/1infras/go-kit/src/cmd/cache/redis"
+	"github.com/1infras/go-kit/cache/redis"
 	rd "github.com/go-redis/redis"
 	"testing"
 	"time"

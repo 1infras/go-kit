@@ -4,8 +4,8 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/1infras/go-kit/src/cmd/logger"
-	"github.com/1infras/go-kit/src/cmd/middleware"
+	"github.com/1infras/go-kit/logger"
+	"github.com/1infras/go-kit/middleware"
 	"github.com/gorilla/mux"
 	"github.com/urfave/negroni"
 	"go.elastic.co/apm/module/apmgorilla"

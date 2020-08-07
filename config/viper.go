@@ -7,14 +7,9 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/1infras/go-kit/src/cmd/logger"
-	fileutils "github.com/1infras/go-kit/src/cmd/util/file_utils"
+	"github.com/1infras/go-kit/logger"
+	fileutils "github.com/1infras/go-kit/util/file_utils"
 	"github.com/spf13/viper"
-)
-
-var (
-	//SupportedConfigTypes - Config types allow to read
-	SupportedConfigTypes = []string{"json", "toml", "yaml"}
 )
 
 //ReadConfigByViper - Read config by viper (support merge multiple config files)

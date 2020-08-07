@@ -2,7 +2,7 @@ package cache
 
 import (
 	"context"
-	"github.com/1infras/go-kit/src/cmd/cache/lru"
+	"github.com/1infras/go-kit/cache/lru"
 	"github.com/go-redis/redis"
 	"go.elastic.co/apm"
 	"reflect"

@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/1infras/go-kit/src/cmd/logger"
+	"github.com/1infras/go-kit/logger"
 
 	"github.com/olivere/elastic"
 	"go.elastic.co/apm/module/apmelasticsearch"
