@@ -41,8 +41,16 @@ func NewMultiCache(size int, expiration time.Duration, redisCache redis.Universa
 	}, nil
 }
 
+func (c *MultiCache) wrapContext(ctx context.Context) context.Context {
+	if ctx == nil {
+		return context.Background()
+	}
+	return ctx
+}
+
 //Set cache to redis
 func (c *MultiCache) redisSet(ctx context.Context, key string, values []byte, expiration time.Duration) error {
+	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.set", "cache.multi_cache")
 	defer span.End()
 	return c.Redis.Set(key, values, expiration).Err()
@@ -50,6 +58,7 @@ func (c *MultiCache) redisSet(ctx context.Context, key string, values []byte, ex
 
 //Set cache to LRU
 func (c *MultiCache) lruSet(ctx context.Context, key string, values []byte, expiration time.Duration) bool {
+	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "lru.set", "cache.multi_cache")
 	defer span.End()
 	return c.LRU.Add(key, values, expiration)
@@ -57,6 +66,7 @@ func (c *MultiCache) lruSet(ctx context.Context, key string, values []byte, expi
 
 //Get cache from redis
 func (c *MultiCache) redisGet(ctx context.Context, key string) ([]byte, error) {
+	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.get", "cache.multi_cache")
 	defer span.End()
 	return c.Redis.Get(key).Bytes()
@@ -64,6 +74,7 @@ func (c *MultiCache) redisGet(ctx context.Context, key string) ([]byte, error) {
 
 //Get ttl cache from redis
 func (c *MultiCache) redisGetTTL(ctx context.Context, key string) (time.Duration, error) {
+	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.get_ttl", "cache.multi_cache")
 	defer span.End()
 	return c.Redis.TTL(key).Result()
@@ -71,6 +82,7 @@ func (c *MultiCache) redisGetTTL(ctx context.Context, key string) (time.Duration
 
 //Get cache from lru
 func (c *MultiCache) lruGet(ctx context.Context, key string) (interface{}, bool) {
+	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "lru.get", "cache.multi_cache")
 	defer span.End()
 	return c.LRU.Get(key)
