@@ -3,7 +3,7 @@ package config
 import (
 	"testing"
 
-	"github.com/1infras/go-kit/src/cmd/logger"
+	"github.com/1infras/go-kit/logger"
 	"github.com/spf13/viper"
 )
 

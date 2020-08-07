@@ -4,7 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/1infras/go-kit/src/cmd/database/elasticsearch"
+	"github.com/1infras/go-kit/database/elasticsearch"
 	"net/http"
 	"os"
 	"os/signal"
@@ -12,9 +12,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/1infras/go-kit/src/cmd/config"
-	"github.com/1infras/go-kit/src/cmd/logger"
-	"github.com/1infras/go-kit/src/cmd/transport"
+	"github.com/1infras/go-kit/config"
+	"github.com/1infras/go-kit/logger"
+	"github.com/1infras/go-kit/transport"
 )
 
 var (
@@ -107,8 +107,8 @@ func (s *Server) Run() {
 		//Run on close
 		s.Close()
 
-		ctx, _ := context.WithTimeout(context.Background(), 15*time.Second)
-
+		ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+		defer cancel()
 		//A interrupt signal has sent to us, let's shutdown server with gracefully
 		logger.Info("Stopping server...")
 

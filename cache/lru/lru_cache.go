@@ -1,7 +1,7 @@
 package lru
 
 import (
-	"github.com/1infras/go-kit/src/cmd/cache/lru/core"
+	"github.com/1infras/go-kit/cache/lru/core"
 	"sync"
 	"time"
 )
