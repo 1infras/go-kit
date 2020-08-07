@@ -13,12 +13,12 @@ func TestMultiCache(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	c, err := NewMultiCache(100, 5 * time.Second, r)
+	c, err := NewMultiCache(100, 5*time.Second, r)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = c.Set("foo", []byte("bar"), 5 * time.Second)
+	_, err = c.Set("foo", []byte("bar"), 5*time.Second)
 	if err != nil {
 		t.Fatal(err)
 	}
