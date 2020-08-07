@@ -83,29 +83,7 @@ func (c *MultiCache) Set(key string, values []byte, expiration time.Duration) (b
 
 //Get cache with multiple layers (LRU first, backed by Redis)
 func (c *MultiCache) Get(key string) ([]byte, error) {
-	//Get from LRU
-	values, ok := c.LRU.Get(key)
-	if ok {
-		v := reflect.ValueOf(values)
-		return v.Bytes(), nil
-	}
-
-	//Get from Redis
-	v, err := c.Redis.Get(key).Bytes()
-	if err != nil {
-		return nil, err
-	}
-
-	//Get TTL from Redis
-	ttl, err := c.Redis.TTL(key).Result()
-	if err != nil {
-		return nil, err
-	}
-
-	//Set back to LRU with TTL
-	c.LRU.Add(key, v, ttl)
-
-	return v, nil
+	return c.GetCtx(nil, key)
 }
 
 //SetCtx cache with value and expiration, support transaction to tracing
