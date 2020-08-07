@@ -232,10 +232,13 @@ func NewDefaultRedisClient() (*redis.Client, error) {
 }
 
 //Instrument - Wrap Redis UniversalClient with APM
-//For example:
-//ctx := r.Context() /r is HTTP Request Context
+//
+//ctx := r.Context()
+//
 //client, err := NewUniversalRedisClient(&redis.Connection{Address: "localhost:6379"})
+//
 //if err != nil {panic(err)}
+//
 //client = Instrument(ctx, client)
 func Instrument(ctx context.Context, client redis.UniversalClient) redis.UniversalClient {
 	return apmgoredis.Wrap(client).WithContext(ctx)
