@@ -2,10 +2,11 @@ package cache
 
 import (
 	"encoding/json"
+	"fmt"
 	"testing"
 
-	// "github.com/go-redis/redis"
 	"github.com/1infras/go-kit/cache/redis"
+	// "github.com/go-redis/redis"
 )
 
 func TestOneCache_GetInt64(t *testing.T) {
@@ -14,7 +15,7 @@ func TestOneCache_GetInt64(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cache := NewOneCacheStruct().SetRedis(r)
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
 
 	cache.Set("hello", 1, 60)
 
@@ -36,7 +37,7 @@ func TestOneCache_GetFloat(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cache := NewOneCacheStruct().SetRedis(r)
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
 
 	cache.Set("hello", 1.1, 60)
 
@@ -58,7 +59,7 @@ func TestOneCache_GetString(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cache := NewOneCacheStruct().SetRedis(r)
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
 
 	cache.Set("hello_str", "Hello String", 60)
 
@@ -86,9 +87,9 @@ func TestOneCache_GetStruct(t *testing.T) {
 		C float64 `json:"c"`
 	}
 
-	m := fakeStruct{1, "as", 2.0}
+	m := &fakeStruct{1, "as", 2.0}
 
-	cache := NewOneCacheStruct().SetRedis(r)
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
 
 	cache.Set("hello_struct", m, 60)
 
@@ -111,8 +112,32 @@ func TestOneCache_GetStruct(t *testing.T) {
 		return
 	}
 
-	// t.Error(m)
+}
 
-	// t.Error(val.Value.([]byte))
+func TestOneCacheStruct_Flush(t *testing.T) {
+	r, err := redis.NewDefaultRedisUniversalClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
+	cache.Flush()
+}
+
+func TestOneCacheStruct_Report(t *testing.T) {
+	r, err := redis.NewDefaultRedisUniversalClient()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	cache := NewOneCacheStruct().WithRedis(r, "hello")
+	for i := 0; i < 1000; i++ {
+		cache.Set(fmt.Sprintf("200_%v", i), i, 60)
+	}
+
+	cache.Get("200_1")
+	cache.Get("100")
+
+	fmt.Println(cache.Report())
 
 }

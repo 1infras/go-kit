@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -39,8 +40,8 @@ const (
 )
 
 var (
-	// DefaultTimeoutInSeconds --
-	DefaultTimeoutInSeconds = 30 * time.Second
+	// DefaultTTL --
+	DefaultTTL = 30 * time.Second
 
 	// OptimalInMemAccessTime // Follow Jeff Dean, read 1MB sequential from memory ideally is 250 micro-seconds --
 	OptimalInMemAccessTime = 1 * time.Millisecond
@@ -58,6 +59,15 @@ type cacheStat struct {
 	totalCount   uint32
 	expiredCount uint32
 	setCount     uint32
+	totalSize    uint32
+
+	totalReadsProcessed  uint32
+	totalWritesProcessed uint32
+
+	startTime int64
+
+	totalReadBytes  int64
+	totalWriteBytes int64
 }
 
 type cacheItem struct {
@@ -69,13 +79,12 @@ type cacheItem struct {
 
 // Item --
 type Item struct {
-	value    interface{}
-	rawValue []byte
+	value []byte
 }
 
 // Bytes --
 func (i *Item) Bytes() []byte {
-	return i.rawValue
+	return i.value
 }
 
 // Val --
@@ -85,38 +94,31 @@ func (i *Item) Val() interface{} {
 
 // Int64 --
 func (i *Item) Int64() int64 {
-	v, _ := i.value.(int64)
-	return v
-}
-
-// Int32 --
-func (i *Item) Int32() int32 {
-	v, _ := i.value.(int32)
+	v, _ := strconv.ParseInt(string(i.value), 10, 64)
 	return v
 }
 
 // Int --
 func (i *Item) Int() int {
-	v, _ := i.value.(int)
+	v, _ := strconv.Atoi(string(i.value))
 	return v
 }
 
 // Boolean --
 func (i *Item) Boolean() bool {
-	v, _ := i.value.(bool)
+	v, _ := strconv.ParseBool(string(i.value))
 	return v
 }
 
 // Float64 --
 func (i *Item) Float64() float64 {
-	v, _ := i.value.(float64)
+	v, _ := strconv.ParseFloat(string(i.value), 64)
 	return v
 }
 
 // String --
 func (i *Item) String() string {
-	v, _ := i.value.(string)
-	return v
+	return string(i.value)
 }
 
 // OneCacheStruct --
@@ -135,33 +137,14 @@ type OneCacheStruct struct {
 
 	stream     chan cacheItem
 	serializer codec.ICodec
-}
 
-// NewOneCacheStructWithNamespace --
-func NewOneCacheStructWithNamespace(namespace string) *OneCacheStruct {
-	lruCache, err := lru.NewWithExpiration(DefaultMaxEntries, DefaultTimeoutInSeconds)
-	if err != nil {
-		logger.Panicf("Cannot init lru cache: %v", err)
-		return nil
-	}
-
-	ctx, cancelFunc := util.GetContextWithCancel(context.Background())
-
-	return &OneCacheStruct{
-		namespace:   namespace,
-		remoteCache: false,
-		lruCache:    lruCache,
-		stat:        &cacheStat{},
-		ctx:         ctx,
-		cancelFunc:  cancelFunc,
-		serializer:  &codec.JSONCodec{},
-		stream:      make(chan cacheItem, 0),
-	}
+	report bool
+	// reportStream chan
 }
 
 // NewOneCacheStruct --
 func NewOneCacheStruct() *OneCacheStruct {
-	lruCache, err := lru.NewWithExpiration(DefaultMaxEntries, DefaultTimeoutInSeconds)
+	lruCache, err := lru.NewWithExpiration(DefaultMaxEntries, DefaultTTL)
 	if err != nil {
 		logger.Panicf("Cannot init lru cache: %v", err)
 		return nil
@@ -172,19 +155,22 @@ func NewOneCacheStruct() *OneCacheStruct {
 	return &OneCacheStruct{
 		remoteCache: false,
 		lruCache:    lruCache,
-		stat:        &cacheStat{},
 		ctx:         ctx,
 		cancelFunc:  cancelFunc,
 		serializer:  &codec.JSONCodec{},
 		stream:      make(chan cacheItem, 0),
+		stat: &cacheStat{
+			startTime: time.Now().Unix(),
+		},
 	}
 }
 
-// SetRedis --
-func (o *OneCacheStruct) SetRedis(redisClient redis.UniversalClient) *OneCacheStruct {
+// WithRedis --
+func (o *OneCacheStruct) WithRedis(redisClient redis.UniversalClient, namespace string) *OneCacheStruct {
 	o.redisClient = redisClient
 	o.remoteCache = true
 	o.asyncRemoteCache = true
+	o.namespace = namespace
 
 	logger.Infof("Enable remote synced")
 	o.remoteSync()
@@ -192,25 +178,11 @@ func (o *OneCacheStruct) SetRedis(redisClient redis.UniversalClient) *OneCacheSt
 	return o
 }
 
-// SetSize --
-func (o *OneCacheStruct) SetSize(maxSize int) *OneCacheStruct {
-	lruCache, _ := lru.NewWithExpiration(maxSize, DefaultTimeoutInSeconds)
-
-	o.lruCache = lruCache
-	return o
-}
-
-// SetContext --
-func (o *OneCacheStruct) SetContext(ctx context.Context) *OneCacheStruct {
+// WithContext --
+func (o *OneCacheStruct) WithContext(ctx context.Context) *OneCacheStruct {
 	ctx, cancelFunc := util.GetContextWithCancel(ctx)
 	o.ctx = ctx
 	o.cancelFunc = cancelFunc
-	return o
-}
-
-// SetNamespace --
-func (o *OneCacheStruct) SetNamespace(namespace string) *OneCacheStruct {
-	o.namespace = namespace
 	return o
 }
 
@@ -222,30 +194,33 @@ func (o *OneCacheStruct) SetSerializer(c codec.ICodec) *OneCacheStruct {
 
 // Init Redis
 func (o *OneCacheStruct) set(key string, value interface{}, ttl time.Duration) {
-	defer atomic.AddUint32(&o.stat.totalCount, 1)
+	defer atomic.AddUint32(&o.stat.totalWritesProcessed, 1)
 
 	if ttl <= 0 {
-		ttl = DefaultTimeoutInSeconds
+		ttl = DefaultTTL
 	}
 
-	valueStr, err := o.serializer.Encode(value)
+	valueBytes, err := o.serializer.Encode(value)
 
 	if err != nil {
 		logger.Errorf("Cannot encode to byte: %v", err)
 		return
 	}
 
-	o.lruCache.Add(key, valueStr, ttl)
-
-	atomic.AddUint32(&o.stat.setCount, 1)
+	o.lruCache.Add(key, valueBytes, ttl)
 
 	if o.remoteCache && o.asyncRemoteCache {
-		o.stream <- cacheItem{key, valueStr, ttl, KVType}
+		o.stream <- cacheItem{key, valueBytes, ttl, KVType}
 	}
+
+	atomic.AddUint32(&o.stat.setCount, 1)
+	atomic.AddInt64(&o.stat.totalWriteBytes, int64(len(valueBytes)))
 }
 
 func (o *OneCacheStruct) get(key string, dataType int) (*Item, error) {
-	defer atomic.AddUint32(&o.stat.totalCount, 1)
+	defer atomic.AddUint32(&o.stat.totalReadsProcessed, 1)
+
+	valueBytes := make([]byte, 0)
 
 	start := time.Now()
 	value, isExisted := o.lruCache.Get(key)
@@ -272,17 +247,24 @@ func (o *OneCacheStruct) get(key string, dataType int) (*Item, error) {
 
 			atomic.AddUint32(&o.stat.hitCount, 1)
 
-			valItem, _ := o.serializer.Decode([]byte(val))
-			return &Item{valItem, []byte(val)}, nil
+			valueBytes = []byte(val)
+			goto Return
 		}
 
 		atomic.AddUint32(&o.stat.missCount, 1)
 		return nil, ErrNotFound
+	} else {
+		valueBytes = value.([]byte)
 	}
 
 	atomic.AddUint32(&o.stat.hitCount, 1)
-	valItem, _ := o.serializer.Decode(value.([]byte))
-	return &Item{valItem, value.([]byte)}, nil
+
+Return:
+
+	valSerializer, _ := o.serializer.Decode(valueBytes)
+
+	atomic.AddInt64(&o.stat.totalWriteBytes, int64(len(valSerializer.([]byte))))
+	return &Item{valSerializer.([]byte)}, nil
 }
 
 func (o *OneCacheStruct) remoteSync() {
@@ -291,6 +273,7 @@ func (o *OneCacheStruct) remoteSync() {
 			select {
 			case <-ctx.Done():
 				return
+
 			case item := <-o.stream:
 				remoteKey := fmt.Sprintf("%v_%v", o.namespace, item.Key)
 				var err error
@@ -325,4 +308,82 @@ func (o *OneCacheStruct) Set(key string, value interface{}, ttlInSeconds int) {
 func (o *OneCacheStruct) Get(key string) (*Item, error) {
 	val, err := o.get(key, KVType)
 	return val, err
+}
+
+// Delete --
+func (o *OneCacheStruct) Delete(key string) {
+	o.lruCache.Remove(key)
+
+	if o.asyncRemoteCache {
+		o.redisClient.Del(fmt.Sprintf("%v_%v", o.namespace, key)).Result()
+	}
+}
+
+// Flush --
+func (o *OneCacheStruct) Flush() {
+	o.lruCache.Purge()
+
+	if o.remoteCache {
+		var cursor uint64
+		var allKeys []string
+		var err error
+
+		for {
+			var keys []string
+			keys, cursor, err = o.redisClient.Scan(cursor, "*", 10).Result()
+			if err != nil {
+				return
+			}
+
+			if cursor == 0 {
+				break
+			}
+			allKeys = append(allKeys, keys...)
+
+		}
+		o.redisClient.Del(allKeys...).Result()
+	}
+
+}
+
+// Exists --
+func (o *OneCacheStruct) Exists(key string) bool {
+	isExistedLocal := o.lruCache.Contains(key)
+	if !isExistedLocal && o.asyncRemoteCache {
+		isRemote, err := o.redisClient.Exists(fmt.Sprintf("%v_%v", o.namespace, key)).Result()
+		if err != nil && err.Error() != redis.Nil.Error() {
+			logger.Errorf("Cannot fetch data from redis: %v", err)
+			return false
+		}
+		return isRemote == 1
+	}
+
+	return isExistedLocal
+}
+
+// Report --
+func (o *OneCacheStruct) Report() string {
+	duration := time.Since(time.Unix(o.stat.startTime, 0)).Seconds()
+
+	return fmt.Sprintf(`
+		#Report
+		Total ops: %v,
+		Total write ops: %v,
+		Total read ops: %v,
+		Total write bytes: %v,
+		Total read bytes: %v,
+		Read ops per second: %.2f,
+		Write ops per second: %.2f,
+		Cache hits: %v,
+		Cache misses: %v
+	`, o.stat.totalCount,
+		o.stat.totalWritesProcessed,
+		o.stat.totalReadsProcessed,
+		o.stat.totalWriteBytes,
+		o.stat.totalReadBytes,
+		float64(o.stat.totalWritesProcessed*1.0)/duration,
+		float64(o.stat.totalReadsProcessed*1.0)/duration,
+		o.stat.hitCount,
+		o.stat.missCount,
+	)
 }
