@@ -24,6 +24,7 @@ go get -u https://github.com/1infras/go-kit
 - Get starting with:
 
 **main.go**
+
 ```golang
 type ExampleHandler struct {
     Foo string
@@ -61,22 +62,23 @@ func main() {
 ```
 
 Run with:
+
 ```shell
 go run main.go -http-port=8080 -log-level=debug -skip-config=true
 ```
 
 Verify with:
+
 ```shell
 curl -X GET http://localhost:8080/health
 ```
+
 or
+
 ```shell
 curl -X GET http://localhost:8080/api/v1
 ```
 
 ## Contributors
-[![](https://github.com/ducmeit1.png?size=50)](https://github.com/ducmeit1)
 
-## Licensed
-
-This repository belongs to 1Infras project of 1MG (One Mount Group)
+[![ducmeit1](https://github.com/ducmeit1.png?size=50)](https://github.com/ducmeit1)

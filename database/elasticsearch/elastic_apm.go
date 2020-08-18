@@ -1,13 +1,13 @@
 package elasticsearch
 
 import (
-	"github.com/spf13/cast"
-	"github.com/spf13/viper"
 	"os"
+
+	"github.com/spf13/cast"
 )
 
 const (
-	//DefaultAPMServer
+	//DefaultAPMServer -
 	DefaultAPMServer = "http://localhost:8200"
 )
 
@@ -20,22 +20,14 @@ type APMConnection struct {
 	Active      bool   `json:"active"`
 }
 
-func APMConnectionWithViper() *APMConnection {
-	return &APMConnection{
-		URL:         viper.GetString("elasticsearch_apm.url"),
-		SecretToken: viper.GetString("elasticsearch_apm.secret_token"),
-		ServiceName: viper.GetString("elasticsearch_apm.service_name"),
-		Environment: viper.GetString("elasticsearch_apm.environment"),
-		Active:      viper.GetBool("elasticsearch_apm.active"),
-	}
-}
-
+//DefaultAPMConnection -
 func DefaultAPMConnection() *APMConnection {
 	return &APMConnection{
 		URL: DefaultAPMServer,
 	}
 }
 
+//AutoBindEnvironment -
 func (c *APMConnection) AutoBindEnvironment() {
 	if c.URL != "" {
 		os.Setenv("ELASTIC_APM_SERVER_URL", c.URL)
