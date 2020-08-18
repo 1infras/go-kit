@@ -6,8 +6,6 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/spf13/viper"
-
 	"github.com/1infras/go-kit/logger"
 
 	"github.com/olivere/elastic"
@@ -42,7 +40,7 @@ func (c *Connection) RoundTrip(r *http.Request) (*http.Response, error) {
 	return apmelasticsearch.WrapRoundTripper(http.DefaultTransport).RoundTrip(r)
 }
 
-//DefaultAPMConnection - Set a default connection
+//Default - Set a default connection
 func (c *Connection) Default() {
 	if c.URL == "" {
 		c.URL = DefaultElasticURL
@@ -55,22 +53,6 @@ func (c *Connection) Default() {
 	if c.RetryAfter <= 0 {
 		c.RetryAfter = DefaultRetryAfter
 	}
-}
-
-//ConnectionWithViper - Read connection with viper
-func ConnectionWithViper() *Connection {
-	c := &Connection{
-		URL:         viper.GetString("elasticsearch.url"),
-		Secure:      viper.GetBool("elasticsearch.secure"),
-		APIKey:      viper.GetString("elasticsearch.api_key"),
-		EnableSniff: viper.GetBool("elasticsearch.enable_sniff"),
-		MaxRetries:  viper.GetInt("elasticsearch.max_retries"),
-		RetryAfter:  viper.GetDuration("elasticsearch.retry_after"),
-	}
-
-	c.Default()
-
-	return c
 }
 
 //NewElasticClient - New a elastic client with connection configured
