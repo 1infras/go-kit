@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/1infras/go-kit/logger"
-	fileutils "github.com/1infras/go-kit/util/file_utils"
+	"github.com/1infras/go-kit/util/file_utils"
 	"github.com/spf13/viper"
 )
 
@@ -47,7 +47,7 @@ func LoadConfigFilesByViper(configFilePaths []string, configType string) error {
 			continue
 		}
 		//read content file
-		content, err := fileutils.ReadLocalFile(filePath)
+		content, err := file_utils.ReadLocalFile(filePath)
 		if err != nil {
 			return err
 		}
