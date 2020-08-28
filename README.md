@@ -1,6 +1,6 @@
 # GO-KIT
 
-![Go](https://github.com/1infras/go-kit/workflows/Go/badge.svg)
+![Go](https://github.com/1infras/go-kit/workflows/Go/badge.svg?branch=master)
 
 ## Introduction
 
