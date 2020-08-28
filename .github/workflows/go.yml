@@ -2,9 +2,11 @@ name: Go
 
 on:
   push:
-    branches: [ $default-branch ]
+    branches:
+      - master
+    tags:
+      - v*
   pull_request:
-    branches: [ $default-branch ]
 
 jobs:
 
@@ -25,9 +27,5 @@ jobs:
       - name: Get dependencies
         run: |
           go get -v -t -d ./...
-          if [ -f Gopkg.toml ]; then
-              curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
-              dep ensure
-          fi
       - name: Verify
         run: go vet $(go list ./...)
