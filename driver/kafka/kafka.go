@@ -3,6 +3,7 @@ package kafka
 import (
 	"crypto/tls"
 	"fmt"
+
 	"github.com/1infras/go-kit/util/cert_utils"
 	"github.com/1infras/go-kit/util/file_utils"
 	"github.com/Shopify/sarama"
@@ -27,12 +28,12 @@ func NewDefaultKafkaConnection() (*Connection, error) {
 	}
 
 	if viper.GetBool("kafka.tls") {
-		tlsClientCert, err := file_utils.GetAbsolutelyLocalFilePath("kafka.tls_client_cert")
+		tlsClientCert, err := file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_cert"))
 		if err != nil {
 			return nil, err
 		}
 
-		tlsClientKey, err := file_utils.GetAbsolutelyLocalFilePath("kafka.tls_client_key")
+		tlsClientKey, err := file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_key"))
 		if err != nil {
 			return nil, err
 		}
@@ -41,7 +42,7 @@ func NewDefaultKafkaConnection() (*Connection, error) {
 		tlsSkipVerify := viper.GetBool("kafka.tls_skip_verify")
 
 		if tlsClientCA != "" {
-			tlsClientCA, err = file_utils.GetAbsolutelyLocalFilePath("kafka.tls_client_ca")
+			tlsClientCA, err = file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_ca"))
 			if err != nil {
 				return nil, err
 			}
