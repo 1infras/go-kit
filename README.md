@@ -1,5 +1,7 @@
 # GO-KIT
 
+![Go](https://github.com/1infras/go-kit/workflows/Go/badge.svg)
+
 ## Introduction
 
 This repository will help you build a Golang microservices project faster and optimized
@@ -14,6 +16,7 @@ This repository will help you build a Golang microservices project faster and op
     - ElasticSearch (DocumentDB)
     - Redis (Multiple client)
     - Viper (Read application configuration)
+    - Kafka
 
 ## Usages
 
