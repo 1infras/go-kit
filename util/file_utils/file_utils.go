@@ -1,11 +1,13 @@
-package fileutils
+package file_utils
 
 import (
 	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
-//ReadLocalFile - Read a local file with file path
+//ReadLocalFile
 func ReadLocalFile(fileName string) ([]byte, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -25,4 +27,29 @@ func ReadLocalFile(fileName string) ([]byte, error) {
 	f.Read(buffer)
 
 	return buffer, nil
+}
+
+//GetAbsolutelyLocalFilePath
+func GetAbsolutelyLocalFilePath(path string) (string, error) {
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// If input file path is not absolutely filepath, let's join it with current working directory
+	if !filepath.IsAbs(path) {
+		path = filepath.Join(wd, strings.Trim(path, "."))
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return "", err
+	}
+
+	//
+	if info.IsDir() {
+		return "", fmt.Errorf("%v is is not a file", path)
+	}
+
+	return path, nil
 }
