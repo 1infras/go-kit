@@ -4,6 +4,7 @@ go 1.13
 
 require (
 	github.com/Shopify/sarama v1.27.0
+	github.com/confluentinc/confluent-kafka-go v1.4.2
 	github.com/elastic/go-sysinfo v1.4.0 // indirect
 	github.com/elastic/go-windows v1.0.1 // indirect
 	github.com/go-redis/redis v6.15.3-0.20190424063336-97e6ed817821+incompatible
