@@ -261,10 +261,8 @@ func (o *OneCacheStruct) get(key string, dataType int) (*Item, error) {
 
 Return:
 
-	valSerializer, _ := o.serializer.Decode(valueBytes)
-
-	atomic.AddInt64(&o.stat.totalWriteBytes, int64(len(valSerializer.([]byte))))
-	return &Item{valSerializer.([]byte)}, nil
+	atomic.AddInt64(&o.stat.totalWriteBytes, int64(len(valueBytes)))
+	return &Item{valueBytes}, nil
 }
 
 func (o *OneCacheStruct) remoteSync() {
@@ -386,4 +384,14 @@ func (o *OneCacheStruct) Report() string {
 		o.stat.hitCount,
 		o.stat.missCount,
 	)
+}
+
+// UnmarshalKey --
+func (o *OneCacheStruct) UnmarshalKey(key string, obj interface{}) error {
+	val, err := o.get(key, KVType)
+	if err != nil {
+		return err
+	}
+
+	return o.serializer.Decode(val.Bytes(), obj)
 }

@@ -3,6 +3,7 @@ package codec
 import (
 	"encoding/json"
 	"fmt"
+	"reflect"
 
 	"github.com/1infras/go-kit/logger"
 )
@@ -22,6 +23,10 @@ func (j *JSONCodec) Encode(value interface{}) ([]byte, error) {
 }
 
 // Decode --
-func (j *JSONCodec) Decode(data []byte) (interface{}, error) {
-	return data, nil
+func (j *JSONCodec) Decode(data []byte, object interface{}) error {
+	if reflect.ValueOf(object).IsNil() {
+		return fmt.Errorf("Decoder error: Object is error")
+	}
+	
+	return json.Unmarshal(data, object)
 }
