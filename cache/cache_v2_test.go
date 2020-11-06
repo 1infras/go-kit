@@ -133,9 +133,6 @@ func TestOneCacheStruct_Report(t *testing.T) {
 		cache.Set(fmt.Sprintf("200_%v", i), i, 60)
 	}
 
-	cache.Get("200_1")
-	cache.Get("100")
-
 	fmt.Println(cache.Report())
 }
 

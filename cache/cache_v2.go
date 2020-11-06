@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
-	"sync"
 	"sync/atomic"
 	"time"
 
@@ -51,15 +50,18 @@ var (
 
 	// ErrNotFound --
 	ErrNotFound = errors.New("cache: Key is not found")
+
+	// ReportInSecond --
+	ReportInSecond = 60 * time.Second
 )
 
 type cacheStat struct {
-	hitCount     uint32
-	missCount    uint32
-	totalCount   uint32
-	expiredCount uint32
-	setCount     uint32
-	totalSize    uint32
+	hitCount   uint32
+	missCount  uint32
+	totalCount uint32
+	// expiredCount uint32
+	setCount uint32
+	// totalSize    uint32
 
 	totalReadsProcessed  uint32
 	totalWritesProcessed uint32
@@ -126,7 +128,6 @@ type OneCacheStruct struct {
 	namespace        string
 	remoteCache      bool
 	asyncRemoteCache bool
-	lock             sync.RWMutex
 
 	lruCache    *lru.Cache
 	redisClient redis.UniversalClient
@@ -137,9 +138,6 @@ type OneCacheStruct struct {
 
 	stream     chan cacheItem
 	serializer codec.ICodec
-
-	report bool
-	// reportStream chan
 }
 
 // NewOneCacheStruct --
@@ -158,11 +156,26 @@ func NewOneCacheStruct() *OneCacheStruct {
 		ctx:         ctx,
 		cancelFunc:  cancelFunc,
 		serializer:  &codec.JSONCodec{},
-		stream:      make(chan cacheItem, 0),
+		stream:      make(chan cacheItem),
 		stat: &cacheStat{
 			startTime: time.Now().Unix(),
 		},
 	}
+}
+
+// RunReport --
+func (o *OneCacheStruct) RunReport() {
+	ticker := time.NewTicker(ReportInSecond)
+	go func() {
+		for {
+			select {
+			case <-o.ctx.Done():
+				return
+			case <-ticker.C:
+				fmt.Println(o.Report())
+			}
+		}
+	}()
 }
 
 // WithRedis --
@@ -220,7 +233,7 @@ func (o *OneCacheStruct) set(key string, value interface{}, ttl time.Duration) {
 func (o *OneCacheStruct) get(key string, dataType int) (*Item, error) {
 	defer atomic.AddUint32(&o.stat.totalReadsProcessed, 1)
 
-	valueBytes := make([]byte, 0)
+	var valueBytes []byte
 
 	start := time.Now()
 	value, isExisted := o.lruCache.Get(key)
@@ -309,16 +322,19 @@ func (o *OneCacheStruct) Get(key string) (*Item, error) {
 }
 
 // Delete --
-func (o *OneCacheStruct) Delete(key string) {
+func (o *OneCacheStruct) Delete(key string) error {
 	o.lruCache.Remove(key)
 
 	if o.asyncRemoteCache {
-		o.redisClient.Del(fmt.Sprintf("%v_%v", o.namespace, key)).Result()
+		_, err := o.redisClient.Del(fmt.Sprintf("%v_%v", o.namespace, key)).Result()
+		return err
 	}
+
+	return nil
 }
 
 // Flush --
-func (o *OneCacheStruct) Flush() {
+func (o *OneCacheStruct) Flush() error {
 	o.lruCache.Purge()
 
 	if o.remoteCache {
@@ -330,7 +346,7 @@ func (o *OneCacheStruct) Flush() {
 			var keys []string
 			keys, cursor, err = o.redisClient.Scan(cursor, "*", 10).Result()
 			if err != nil {
-				return
+				return err
 			}
 
 			if cursor == 0 {
@@ -339,9 +355,11 @@ func (o *OneCacheStruct) Flush() {
 			allKeys = append(allKeys, keys...)
 
 		}
-		o.redisClient.Del(allKeys...).Result()
+		_, err = o.redisClient.Del(allKeys...).Result()
+		return err
 	}
 
+	return nil
 }
 
 // Exists --
