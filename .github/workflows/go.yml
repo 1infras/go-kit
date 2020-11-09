@@ -31,10 +31,10 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Verify
-        run: go vet $(go list ./...) -v
+        run: go vet -v $(go list ./...)
 
       - name: Go test
-        run: go test $(go list ./...) -v
+        run: go test -v $(go list ./...)
 
       - name: Go test coverage
         run: |
