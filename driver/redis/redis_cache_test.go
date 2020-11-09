@@ -1,7 +1,6 @@
 package redis
 
 import (
-	"context"
 	"testing"
 	"time"
 )
@@ -14,8 +13,6 @@ func TestRedisUniversalClient(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	client = Instrument(context.Background(), client)
 
 	err = client.Set("foo", "bar", 1*time.Minute).Err()
 	if err != nil {

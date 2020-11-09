@@ -2,14 +2,16 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/1infras/go-kit/logger"
-	"github.com/Shopify/sarama"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/Shopify/sarama"
+
+	"github.com/1infras/go-kit/logger"
 )
 
-//NewConsumerConfig -
+// NewConsumerConfig -
 func NewConsumerConfig(conn *Connection) *sarama.Config {
 	c := sarama.NewConfig()
 
@@ -24,7 +26,7 @@ func NewConsumerConfig(conn *Connection) *sarama.Config {
 	return c
 }
 
-//CreateConsumer -
+// CreateConsumer -
 func CreateConsumer(conn *Connection) (sarama.Consumer, error) {
 	if conn == nil {
 		return CreateConsumerFromDefaultConnection()
@@ -34,7 +36,7 @@ func CreateConsumer(conn *Connection) (sarama.Consumer, error) {
 	return sarama.NewConsumer(conn.Brokers, c)
 }
 
-//CreateConsumerGroup -
+// CreateConsumerGroup -
 func CreateConsumerGroup(conn *Connection, group string) (sarama.ConsumerGroup, error) {
 	if group == "" {
 		return nil, fmt.Errorf("group must be defined")
@@ -48,9 +50,9 @@ func CreateConsumerGroup(conn *Connection, group string) (sarama.ConsumerGroup, 
 	return sarama.NewConsumerGroup(conn.Brokers, group, c)
 }
 
-//CreateConsumerFromDefaultConnection -
+// CreateConsumerFromDefaultConnection -
 func CreateConsumerFromDefaultConnection() (sarama.Consumer, error) {
-	c, err := NewDefaultKafkaConnection()
+	c, err := NewDefaultKafkaConnection(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -58,13 +60,13 @@ func CreateConsumerFromDefaultConnection() (sarama.Consumer, error) {
 	return CreateConsumer(c)
 }
 
-//CreateConsumerGroupFromDefaultConnection -
+// CreateConsumerGroupFromDefaultConnection -
 func CreateConsumerGroupFromDefaultConnection(group string) (sarama.ConsumerGroup, error) {
 	if group == "" {
 		return nil, fmt.Errorf("group must be defined")
 	}
 
-	c, err := NewDefaultKafkaConnection()
+	c, err := NewDefaultKafkaConnection(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -72,7 +74,7 @@ func CreateConsumerGroupFromDefaultConnection(group string) (sarama.ConsumerGrou
 	return CreateConsumerGroup(c, group)
 }
 
-//Consume -
+// Consume -
 func Consume(consumer sarama.Consumer, topic string, fn func(msg *sarama.ConsumerMessage)) error {
 	if topic == "" {
 		return fmt.Errorf("topic must be defined")
@@ -118,8 +120,8 @@ func Consume(consumer sarama.Consumer, topic string, fn func(msg *sarama.Consume
 	return consumer.Close()
 }
 
-//TODO: Write ConsumeGroup
-//ConsumeGroup -
+// TODO: Write ConsumeGroup
+// ConsumeGroup -
 func ConsumeGroup(consumerGroup sarama.ConsumerGroup, topic string, fn func(msg *sarama.ConsumerMessage)) error {
 	return nil
 }

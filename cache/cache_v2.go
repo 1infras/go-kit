@@ -12,9 +12,10 @@ import (
 	"github.com/1infras/go-kit/logger"
 	"github.com/1infras/go-kit/util"
 
+	"github.com/go-redis/redis"
+
 	"github.com/1infras/go-kit/cache/codec"
 	"github.com/1infras/go-kit/cache/lru"
-	"github.com/go-redis/redis"
 )
 
 // OneCache --

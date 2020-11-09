@@ -2,29 +2,31 @@ package cache
 
 import (
 	"context"
-	"github.com/1infras/go-kit/cache/lru"
-	"github.com/go-redis/redis"
-	"go.elastic.co/apm"
 	"reflect"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis"
+	"go.elastic.co/apm"
+
+	"github.com/1infras/go-kit/cache/lru"
 )
 
 const (
-	//DefaultLRUSize
+	// DefaultLRUSize
 	DefaultLRUSize = 500
 )
 
-//MultiCache
-//Caching with multiple layers include LRU and Redis
+// MultiCache
+// Caching with multiple layers include LRU and Redis
 type MultiCache struct {
 	LRU   *lru.Cache
 	Redis redis.UniversalClient
 	lock  sync.RWMutex
 }
 
-//NewMultiCache
-//New a multi cache layers
+// NewMultiCache
+// New a multi cache layers
 func NewMultiCache(size int, expiration time.Duration, redisCache redis.UniversalClient) (*MultiCache, error) {
 	if size <= 0 {
 		size = DefaultLRUSize
@@ -48,7 +50,7 @@ func (c *MultiCache) wrapContext(ctx context.Context) context.Context {
 	return ctx
 }
 
-//Set cache to redis
+// Set cache to redis
 func (c *MultiCache) redisSet(ctx context.Context, key string, values []byte, expiration time.Duration) error {
 	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.set", "cache.multi_cache")
@@ -56,7 +58,7 @@ func (c *MultiCache) redisSet(ctx context.Context, key string, values []byte, ex
 	return c.Redis.Set(key, values, expiration).Err()
 }
 
-//Set cache to LRU
+// Set cache to LRU
 func (c *MultiCache) lruSet(ctx context.Context, key string, values []byte, expiration time.Duration) bool {
 	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "lru.set", "cache.multi_cache")
@@ -64,7 +66,7 @@ func (c *MultiCache) lruSet(ctx context.Context, key string, values []byte, expi
 	return c.LRU.Add(key, values, expiration)
 }
 
-//Get cache from redis
+// Get cache from redis
 func (c *MultiCache) redisGet(ctx context.Context, key string) ([]byte, error) {
 	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.get", "cache.multi_cache")
@@ -72,7 +74,7 @@ func (c *MultiCache) redisGet(ctx context.Context, key string) ([]byte, error) {
 	return c.Redis.Get(key).Bytes()
 }
 
-//Get ttl cache from redis
+// Get ttl cache from redis
 func (c *MultiCache) redisGetTTL(ctx context.Context, key string) (time.Duration, error) {
 	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "redis.get_ttl", "cache.multi_cache")
@@ -80,7 +82,7 @@ func (c *MultiCache) redisGetTTL(ctx context.Context, key string) (time.Duration
 	return c.Redis.TTL(key).Result()
 }
 
-//Get cache from lru
+// Get cache from lru
 func (c *MultiCache) lruGet(ctx context.Context, key string) (interface{}, bool) {
 	ctx = c.wrapContext(ctx)
 	span, _ := apm.StartSpan(ctx, "lru.get", "cache.multi_cache")
@@ -88,52 +90,52 @@ func (c *MultiCache) lruGet(ctx context.Context, key string) (interface{}, bool)
 	return c.LRU.Get(key)
 }
 
-//Set cache with value and expiration
+// Set cache with value and expiration
 func (c *MultiCache) Set(key string, values []byte, expiration time.Duration) (bool, error) {
 	return c.SetCtx(nil, key, values, expiration)
 }
 
-//Get cache with multiple layers (LRU first, backed by Redis)
+// Get cache with multiple layers (LRU first, backed by Redis)
 func (c *MultiCache) Get(key string) ([]byte, error) {
 	return c.GetCtx(nil, key)
 }
 
-//SetCtx cache with value and expiration, support transaction to tracing
+// SetCtx cache with value and expiration, support transaction to tracing
 func (c *MultiCache) SetCtx(ctx context.Context, key string, values []byte, expiration time.Duration) (bool, error) {
-	//Set to redis first
+	// Set to redis first
 	err := c.redisSet(ctx, key, values, expiration)
 	if err != nil {
 		return false, err
 	}
 
-	//Set to LRU
+	// Set to LRU
 	c.lruSet(ctx, key, values, expiration)
 
 	return true, nil
 }
 
-//Get cache with multiple layers (LRU first, backed by Redis), support transaction to tracing
+// Get cache with multiple layers (LRU first, backed by Redis), support transaction to tracing
 func (c *MultiCache) GetCtx(ctx context.Context, key string) ([]byte, error) {
-	//Get from LRU
+	// Get from LRU
 	values, ok := c.lruGet(ctx, key)
 	if ok {
 		v := reflect.ValueOf(values)
 		return v.Bytes(), nil
 	}
 
-	//Get from Redis
+	// Get from Redis
 	v, err := c.redisGet(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	//Get TTL from Redis
+	// Get TTL from Redis
 	ttl, err := c.redisGetTTL(ctx, key)
 	if err != nil {
 		return nil, err
 	}
 
-	//Set back to LRU with TTL
+	// Set back to LRU with TTL
 	c.lruSet(ctx, key, v, ttl)
 
 	return v, nil

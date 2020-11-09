@@ -2,7 +2,7 @@ package kafka
 
 import "github.com/Shopify/sarama"
 
-//NewProducerConfig
+// NewProducerConfig
 func NewProducerConfig(conn *Connection) *sarama.Config {
 	c := sarama.NewConfig()
 
@@ -20,7 +20,7 @@ func NewProducerConfig(conn *Connection) *sarama.Config {
 	return c
 }
 
-//CreateAsyncProducer
+// CreateAsyncProducer
 func CreateAsyncProducer(conn *Connection) (sarama.AsyncProducer, error) {
 	if conn == nil {
 		return CreateAsyncProducerFromDefaultConnection()
@@ -31,7 +31,7 @@ func CreateAsyncProducer(conn *Connection) (sarama.AsyncProducer, error) {
 	return sarama.NewAsyncProducer(conn.Brokers, c)
 }
 
-//CreateSyncProducer
+// CreateSyncProducer
 func CreateSyncProducer(conn *Connection) (sarama.SyncProducer, error) {
 	if conn == nil {
 		return CreateSyncProducerFromDefaultConnection()
@@ -42,9 +42,9 @@ func CreateSyncProducer(conn *Connection) (sarama.SyncProducer, error) {
 	return sarama.NewSyncProducer(conn.Brokers, c)
 }
 
-//CreateAsyncProducerFromDefaultConnection
+// CreateAsyncProducerFromDefaultConnection
 func CreateAsyncProducerFromDefaultConnection() (sarama.AsyncProducer, error) {
-	c, err := NewDefaultKafkaConnection()
+	c, err := NewDefaultKafkaConnection(nil)
 	if err != nil {
 		return nil, err
 	}
@@ -52,9 +52,9 @@ func CreateAsyncProducerFromDefaultConnection() (sarama.AsyncProducer, error) {
 	return CreateAsyncProducer(c)
 }
 
-//CreateSyncProducerFromDefaultConnection
+// CreateSyncProducerFromDefaultConnection
 func CreateSyncProducerFromDefaultConnection() (sarama.SyncProducer, error) {
-	c, err := NewDefaultKafkaConnection()
+	c, err := NewDefaultKafkaConnection(nil)
 	if err != nil {
 		return nil, err
 	}

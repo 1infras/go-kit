@@ -1,47 +1,47 @@
 package redis
 
 import (
-	"context"
 	"fmt"
-	"github.com/spf13/viper"
 	"time"
 
+	"github.com/kelseyhightower/envconfig"
+	"github.com/spf13/viper"
+
 	"github.com/go-redis/redis"
-	"go.elastic.co/apm/module/apmgoredis"
 )
 
 const (
-	//DefaultRedisAddress -
+	// DefaultRedisAddress -
 	DefaultRedisAddress = "localhost:6379"
-	//DefaultMaxRetries -
+	// DefaultMaxRetries -
 	DefaultMaxRetries = 3
-	//DefaultPoolSize -
+	// DefaultPoolSize -
 	DefaultPoolSize = 100
-	//DefaultRetryAfter
+	// DefaultRetryAfter
 	DefaultRetryAfter = 5 * time.Second
 )
 
-//Connection - Config connection to Redis
+// Connection - Config connection to Redis
 type Connection struct {
-	//MasterName - Master name of SentinelCluster
-	MasterName string `json:"master_name"`
-	//Address - Address of redis single
-	Address string `json:"address"`
-	//Addresses - Addresses of redis cluster or sentinel
-	Addresses []string `json:"addresses"`
-	//Password - Optional
-	Password string `json:"password"`
-	//DB - Default is 0
-	DB int `json:"db"`
-	//Max retries - Default is 3
-	MaxRetries int `json:"max_retries"`
-	//PoolSize - Default is 100
-	PoolSize int `json:"pool_size"`
-	//RetryAfter - Default is 5 seconds
-	RetryAfter time.Duration `json:"retry_after"`
+	// MasterName - Master name of SentinelCluster
+	MasterName string `mapstructure:"master_name" envconfig:"REDIS_MASTER_NAME"`
+	// Address - Address of redis single
+	Address string `mapstructure:"address" envconfig:"REDIS_ADDRESS"`
+	// Addresses - Addresses of redis cluster or sentinel
+	Addresses []string `mapstructure:"addresses" envconfig:"REDIS_ADDRESSES"`
+	// Password - Optional
+	Password string `mapstructure:"password" envconfig:"REDIS_PASSWORD"`
+	// DB - Default is 0
+	DB int `mapstructure:"db" envconfig:"REDIS_DB"`
+	// Max retries - Default is 3
+	MaxRetries int `mapstructure:"max_retries" envconfig:"REDIS_MAX_RETRIES"`
+	// PoolSize - Default is 100
+	PoolSize int `mapstructure:"pool_size" envconfig:"REDIS_POOL_SIZE"`
+	// RetryAfter - Default is 5 seconds
+	RetryAfter time.Duration `mapstructure:"retry_after" envconfig:"REDIS_RETRY_AFTER"`
 }
 
-//ConfigWithDefault - Get Connection config with default
+// ConfigWithDefault - Get Connection config with default
 func (c *Connection) Default() {
 	if c.Address == "" && len(c.Addresses) == 0 {
 		c.Address = DefaultRedisAddress
@@ -65,27 +65,36 @@ func (c *Connection) Default() {
 	}
 }
 
-func ConnectionWithViper() *Connection {
-	c := &Connection{
-		MasterName: viper.GetString("redis.master_name"),
-		Address:    viper.GetString("redis.address"),
-		Addresses:  viper.GetStringSlice("redis.addresses"),
-		Password:   viper.GetString("redis.password"),
-		DB:         viper.GetInt("redis.db"),
-		MaxRetries: viper.GetInt("redis.max_retries"),
-		PoolSize:   viper.GetInt("redis.pool_size"),
-		RetryAfter: viper.GetDuration("redis.retry_after"),
+func ProcessConnection() (*Connection, error) {
+	var c *Connection
+	err := envconfig.Process("redis", &c)
+	if err != nil {
+		return nil, err
+	}
+
+	// If connection wasn't found in envconfig then try with viper
+	if c == nil {
+		c = &Connection{
+			MasterName: viper.GetString("redis.master_name"),
+			Address:    viper.GetString("redis.address"),
+			Addresses:  viper.GetStringSlice("redis.addresses"),
+			Password:   viper.GetString("redis.password"),
+			DB:         viper.GetInt("redis.db"),
+			MaxRetries: viper.GetInt("redis.max_retries"),
+			PoolSize:   viper.GetInt("redis.pool_size"),
+			RetryAfter: viper.GetDuration("redis.retry_after"),
+		}
 	}
 
 	c.Default()
 
-	return c
+	return c, nil
 }
 
-//NewUniversalRedisClient - New a redis client base on configuration
-//If you want to use Sentinel, set MasterName
-//If you want to use Cluster, Set Addresses more than one string
-//If you want to use Single, Set Addresses or Address with a string
+// NewUniversalRedisClient - New a redis client base on configuration
+// If you want to use Sentinel, set MasterName
+// If you want to use Cluster, Set Addresses more than one string
+// If you want to use Single, Set Addresses or Address with a string
 func NewUniversalRedisClient(c *Connection) (redis.UniversalClient, error) {
 	if c.Address == "" && len(c.Addresses) == 0 {
 		return nil, fmt.Errorf("address was not set")
@@ -123,7 +132,7 @@ func NewUniversalRedisClient(c *Connection) (redis.UniversalClient, error) {
 	return client, nil
 }
 
-//NewClusterRedisClient - New a redis client with cluster mode
+// NewClusterRedisClient - New a redis client with cluster mode
 func NewClusterRedisClient(c *Connection) (*redis.ClusterClient, error) {
 	if len(c.Addresses) == 0 {
 		return nil, fmt.Errorf("address was not set")
@@ -153,7 +162,7 @@ func NewClusterRedisClient(c *Connection) (*redis.ClusterClient, error) {
 	return client, nil
 }
 
-//NewSentinelRedisClient - New a redis client with sentinel mode
+// NewSentinelRedisClient - New a redis client with sentinel mode
 func NewSentinelRedisClient(c *Connection) (*redis.Client, error) {
 	if len(c.Addresses) == 0 {
 		return nil, fmt.Errorf("address was not set")
@@ -189,7 +198,7 @@ func NewSentinelRedisClient(c *Connection) (*redis.Client, error) {
 	return client, nil
 }
 
-//NewSingleRedisClient - New a redis client with single mode
+// NewSingleRedisClient - New a redis client with single mode
 func NewSingleRedisClient(c *Connection) (*redis.Client, error) {
 	if c.Address == "" {
 		return nil, fmt.Errorf("address was not set")
@@ -220,7 +229,7 @@ func NewSingleRedisClient(c *Connection) (*redis.Client, error) {
 	return client, nil
 }
 
-//NewDefaultRedisClient - New a redis client with default address and single mode
+// NewDefaultRedisClient - New a redis client with default address and single mode
 func NewDefaultRedisClient() (*redis.Client, error) {
 	return NewSingleRedisClient(&Connection{
 		Address:    DefaultRedisAddress,
@@ -231,14 +240,9 @@ func NewDefaultRedisClient() (*redis.Client, error) {
 	})
 }
 
-//NewDefaultRedisUniversalClient - New a redis universal client with default address and single mode
+// NewDefaultRedisUniversalClient - New a redis universal client with default address and single mode
 func NewDefaultRedisUniversalClient() (redis.UniversalClient, error) {
 	c := &Connection{}
 	c.Default()
 	return NewUniversalRedisClient(c)
-}
-
-//Instrument - Wrap Redis UniversalClient with APM
-func Instrument(ctx context.Context, client redis.UniversalClient) redis.UniversalClient {
-	return apmgoredis.Wrap(client).WithContext(ctx)
 }

@@ -1,9 +1,10 @@
 package lru
 
 import (
-	"github.com/1infras/go-kit/cache/lru/core"
 	"sync"
 	"time"
+
+	"github.com/1infras/go-kit/cache/lru/core"
 )
 
 // Cache is a thread-safe fixed size LRU cache.

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/1infras/go-kit/cache/redis"
+	"github.com/1infras/go-kit/driver/redis"
 	// "github.com/go-redis/redis"
 )
 

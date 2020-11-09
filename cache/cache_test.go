@@ -1,10 +1,12 @@
 package cache
 
 import (
-	"github.com/1infras/go-kit/cache/redis"
-	rd "github.com/go-redis/redis"
 	"testing"
 	"time"
+
+	rd "github.com/go-redis/redis"
+
+	"github.com/1infras/go-kit/driver/redis"
 )
 
 func TestMultiCache(t *testing.T) {

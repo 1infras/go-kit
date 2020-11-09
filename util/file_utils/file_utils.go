@@ -7,7 +7,15 @@ import (
 	"strings"
 )
 
-//ReadLocalFile
+func ExistLocalFile(fileName string) bool {
+	info, err := os.Stat(fileName)
+	if os.IsNotExist(err) {
+		return false
+	}
+	// Skip if the file path is a directory
+	return !info.IsDir()
+}
+
 func ReadLocalFile(fileName string) ([]byte, error) {
 	f, err := os.Open(fileName)
 	if err != nil {
@@ -29,7 +37,6 @@ func ReadLocalFile(fileName string) ([]byte, error) {
 	return buffer, nil
 }
 
-//GetAbsolutelyLocalFilePath
 func GetAbsolutelyLocalFilePath(path string) (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
@@ -42,14 +49,21 @@ func GetAbsolutelyLocalFilePath(path string) (string, error) {
 	}
 
 	info, err := os.Stat(path)
-	if err != nil {
-		return "", err
+	if os.IsNotExist(err) {
+		return "", fmt.Errorf("file path: %s is not exist", path)
 	}
 
-	//
+	// Skip if the file path is a directory
 	if info.IsDir() {
-		return "", fmt.Errorf("%v is is not a file", path)
+		return "", fmt.Errorf("file path: %s is is not a file", path)
 	}
 
 	return path, nil
+}
+
+func GetExtLocalFile(fileName string) (string, error) {
+	if !strings.Contains(fileName, ".") {
+		return "", fmt.Errorf("invalid file %s", fileName)
+	}
+	return strings.Trim(filepath.Ext(fileName), "."), nil
 }

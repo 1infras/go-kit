@@ -9,7 +9,7 @@ import (
 
 // NewTLS - New TLS for Kafka client
 func NewTLS(tlsClientCert, tlsClientKey, tlsClientCA string, skipVerify bool) (*tls.Config, error) {
-	//Load client certificate
+	// Load client certificate
 	if tlsClientCert == "" || tlsClientKey == "" {
 		return nil, fmt.Errorf("client cert or client key must not be empty")
 	}
@@ -23,7 +23,7 @@ func NewTLS(tlsClientCert, tlsClientKey, tlsClientCA string, skipVerify bool) (*
 		Certificates: []tls.Certificate{cert},
 	}
 
-	//Load CA certificate
+	// Load CA certificate
 	if tlsClientCA != "" {
 		caCert, err := ioutil.ReadFile(tlsClientCA)
 		if err != nil {
