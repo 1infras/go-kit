@@ -117,10 +117,11 @@ func TestAutomateReadConfig(t *testing.T) {
 	cfg.ConfigType = "environment"
 	cfg.PrefixEnvironment = "my"
 	cfg.Names = "foo,bar"
-	os.Setenv("MY_FOO", "FOO")
-	os.Setenv("MY_BAR", "BAR")
+	_ = os.Setenv("MY_FOO", "FOO")
+	_ = os.Setenv("MY_BAR", "BAR")
 
 	err = AutomateReadConfig(cfg)
+	assert.Nil(t, err)
 	assert.Equal(t, "FOO", viper.GetString("FOO"))
 	assert.Equal(t, "BAR", viper.GetString("BAR"))
 }

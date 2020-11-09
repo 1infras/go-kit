@@ -4,31 +4,23 @@ import (
 	"testing"
 	"time"
 
-	rd "github.com/go-redis/redis"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/1infras/go-kit/driver/redis"
 )
 
 func TestMultiCache(t *testing.T) {
 	r, err := redis.NewDefaultRedisUniversalClient()
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	c, err := NewMultiCache(100, 5*time.Second, r)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	_, err = c.Set("foo", []byte("bar"), 5*time.Second)
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	v, err := c.Get("foo")
-	if err != nil {
-		t.Fatal(err)
-	}
+	assert.Nil(t, err)
 
 	if p := string(v); p != "bar" {
 		t.Fatalf("Expected is bar but actual is %v", p)
@@ -36,15 +28,12 @@ func TestMultiCache(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 	v, err = c.Get("foo")
+	assert.Nil(t, err)
 
-	if p := string(v); p != "bar" {
-		t.Fatalf("Expected is bar but actual is %v", p)
-	}
+	assert.Equal(t, "bar", string(v))
 
 	time.Sleep(5 * time.Second)
 
 	v, err = c.Get("foo")
-	if err != rd.Nil {
-		t.Fatalf("Expected is nil but actual is %v", err)
-	}
+	assert.NotNil(t, err)
 }

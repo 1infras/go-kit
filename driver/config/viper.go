@@ -23,7 +23,9 @@ func IsExtFileViperSupported(ext string) bool {
 
 func ReadConfigWithViper(isMerge bool, values []byte) error {
 	reader := bytes.NewReader(values)
-	defer io.Copy(ioutil.Discard, reader)
+	defer func() {
+		_, _ = io.Copy(ioutil.Discard, reader)
+	}()
 
 	if isMerge {
 		return viper.MergeConfig(reader)

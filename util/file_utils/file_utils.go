@@ -32,7 +32,10 @@ func ReadLocalFile(fileName string) ([]byte, error) {
 	}
 	// load file content to buffer
 	buffer := make([]byte, size)
-	f.Read(buffer)
+	_, err = f.Read(buffer)
+	if err != nil {
+		return nil, err
+	}
 
 	return buffer, nil
 }
