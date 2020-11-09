@@ -28,3 +28,5 @@ gen
 .idea/go-kit.iml
 .idea/misc.xml
 .idea/modules.xml
+
+coverage/

@@ -31,7 +31,13 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Verify
-        run: go vet $(go list ./...)
+        run: go vet $(go list ./...) -v
 
       - name: Go test
-        run: go test $(go list ./...)
+        run: go test $(go list ./...) -v
+
+      - name: Go test coverage
+        run: |
+          mkdir -p coverage
+          go test -cover -coverprofile coverage/coverage.out $(go list ./...)
+          go tool cover -html=coverage/coverage.out -o coverage/coverage.html
