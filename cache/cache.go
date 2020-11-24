@@ -1,142 +1,37 @@
 package cache
 
 import (
-	"context"
-	"reflect"
-	"sync"
 	"time"
 
-	"github.com/go-redis/redis"
-	"go.elastic.co/apm"
-
-	"github.com/1infras/go-kit/cache/lru"
+	"github.com/1infras/go-kit/lib/cache/lru"
+	"github.com/1infras/go-kit/lib/cache/onecache"
+	"github.com/1infras/go-kit/tracing"
+	"github.com/1infras/go-kit/tracing/apmlru"
+	"github.com/1infras/go-kit/tracing/hook"
 )
 
-const (
-	// DefaultLRUSize
-	DefaultLRUSize = 500
-)
-
-// MultiCache
-// Caching with multiple layers include LRU and Redis
-type MultiCache struct {
-	LRU   *lru.Cache
-	Redis redis.UniversalClient
-	lock  sync.RWMutex
-}
-
-// NewMultiCache
-// New a multi cache layers
-func NewMultiCache(size int, expiration time.Duration, redisCache redis.UniversalClient) (*MultiCache, error) {
-	if size <= 0 {
-		size = DefaultLRUSize
-	}
-
-	l, err := lru.NewWithExpiration(size, expiration)
+func NewLRU(size int, expiration time.Duration) (lru.Client, error) {
+	c, err := lru.NewWithExpiration(size, expiration)
 	if err != nil {
 		return nil, err
 	}
 
-	return &MultiCache{
-		LRU:   l,
-		Redis: redisCache,
-	}, nil
-}
-
-func (c *MultiCache) wrapContext(ctx context.Context) context.Context {
-	if ctx == nil {
-		return context.Background()
-	}
-	return ctx
-}
-
-// Set cache to redis
-func (c *MultiCache) redisSet(ctx context.Context, key string, values []byte, expiration time.Duration) error {
-	ctx = c.wrapContext(ctx)
-	span, _ := apm.StartSpan(ctx, "redis.set", "cache.multi_cache")
-	defer span.End()
-	return c.Redis.Set(key, values, expiration).Err()
-}
-
-// Set cache to LRU
-func (c *MultiCache) lruSet(ctx context.Context, key string, values []byte, expiration time.Duration) bool {
-	ctx = c.wrapContext(ctx)
-	span, _ := apm.StartSpan(ctx, "lru.set", "cache.multi_cache")
-	defer span.End()
-	return c.LRU.Add(key, values, expiration)
-}
-
-// Get cache from redis
-func (c *MultiCache) redisGet(ctx context.Context, key string) ([]byte, error) {
-	ctx = c.wrapContext(ctx)
-	span, _ := apm.StartSpan(ctx, "redis.get", "cache.multi_cache")
-	defer span.End()
-	return c.Redis.Get(key).Bytes()
-}
-
-// Get ttl cache from redis
-func (c *MultiCache) redisGetTTL(ctx context.Context, key string) (time.Duration, error) {
-	ctx = c.wrapContext(ctx)
-	span, _ := apm.StartSpan(ctx, "redis.get_ttl", "cache.multi_cache")
-	defer span.End()
-	return c.Redis.TTL(key).Result()
-}
-
-// Get cache from lru
-func (c *MultiCache) lruGet(ctx context.Context, key string) (interface{}, bool) {
-	ctx = c.wrapContext(ctx)
-	span, _ := apm.StartSpan(ctx, "lru.get", "cache.multi_cache")
-	defer span.End()
-	return c.LRU.Get(key)
-}
-
-// Set cache with value and expiration
-func (c *MultiCache) Set(key string, values []byte, expiration time.Duration) (bool, error) {
-	return c.SetCtx(nil, key, values, expiration)
-}
-
-// Get cache with multiple layers (LRU first, backed by Redis)
-func (c *MultiCache) Get(key string) ([]byte, error) {
-	return c.GetCtx(nil, key)
-}
-
-// SetCtx cache with value and expiration, support transaction to tracing
-func (c *MultiCache) SetCtx(ctx context.Context, key string, values []byte, expiration time.Duration) (bool, error) {
-	// Set to redis first
-	err := c.redisSet(ctx, key, values, expiration)
-	if err != nil {
-		return false, err
+	if tracing.Enabled {
+		c.AddHook(apmlru.NewHook())
 	}
 
-	// Set to LRU
-	c.lruSet(ctx, key, values, expiration)
-
-	return true, nil
+	return c, err
 }
 
-// Get cache with multiple layers (LRU first, backed by Redis), support transaction to tracing
-func (c *MultiCache) GetCtx(ctx context.Context, key string) ([]byte, error) {
-	// Get from LRU
-	values, ok := c.lruGet(ctx, key)
-	if ok {
-		v := reflect.ValueOf(values)
-		return v.Bytes(), nil
-	}
-
-	// Get from Redis
-	v, err := c.redisGet(ctx, key)
+func NewOneCache(opts ...onecache.ClientOptionFunc) (onecache.OneCache, error) {
+	c, err := onecache.NewOneCache(opts...)
 	if err != nil {
 		return nil, err
 	}
 
-	// Get TTL from Redis
-	ttl, err := c.redisGetTTL(ctx, key)
-	if err != nil {
-		return nil, err
+	if tracing.Enabled {
+		c.AddHook(hook.NewHook())
 	}
 
-	// Set back to LRU with TTL
-	c.lruSet(ctx, key, v, ttl)
-
-	return v, nil
+	return c, nil
 }

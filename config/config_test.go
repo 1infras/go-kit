@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/1infras/go-kit/driver/consul"
-	"github.com/1infras/go-kit/util/file_utils"
+	"github.com/1infras/go-kit/util"
 )
 
 func TestReadLocalConfigFilesWithViper(t *testing.T) {
@@ -31,10 +31,10 @@ func TestReadRemoteConfigFilesWithConsul(t *testing.T) {
 	})
 	assert.Nil(t, err)
 
-	f1, err := file_utils.ReadLocalFile("config_test.yaml")
+	f1, err := util.Read("config_test.yaml")
 	assert.Nil(t, err)
 
-	f2, err := file_utils.ReadLocalFile("config_test.json")
+	f2, err := util.Read("config_test.json")
 	assert.Nil(t, err)
 
 	keys, err := kv.GetKeys("app")
@@ -90,10 +90,10 @@ func TestAutomateReadConfig(t *testing.T) {
 	cfg.ConfigType = "remote"
 	cfg.ConsulKV = kv
 	cfg.Names = "app/config_test.yaml,app/config_test.json"
-	f1, err := file_utils.ReadLocalFile("config_test.yaml")
+	f1, err := util.Read("config_test.yaml")
 	assert.Nil(t, err)
 
-	f2, err := file_utils.ReadLocalFile("config_test.json")
+	f2, err := util.Read("config_test.json")
 	assert.Nil(t, err)
 
 	keys, err := kv.GetKeys("app")

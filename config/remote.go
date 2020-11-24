@@ -8,7 +8,7 @@ import (
 
 	"github.com/1infras/go-kit/driver/config"
 	"github.com/1infras/go-kit/driver/consul"
-	"github.com/1infras/go-kit/util/file_utils"
+	"github.com/1infras/go-kit/util"
 )
 
 func ReadRemoteConfigFilesWithConsul(kv consul.KV, keys []string, isMerge bool) error {
@@ -28,7 +28,7 @@ func ReadRemoteConfigFilesWithConsul(kv consul.KV, keys []string, isMerge bool) 
 			return fmt.Errorf("read key %s with error: %s", key, err.Error())
 		}
 
-		ext, err := file_utils.GetExtLocalFile(key)
+		ext, err := util.GetExtension(key)
 		if err != nil {
 			return fmt.Errorf("key: %s is not valid file", key)
 		}

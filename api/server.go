@@ -115,7 +115,7 @@ func (_this *httpServer) Run() {
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt)
-		signal.Notify(c, syscall.SIGTERM)
+		signal.Notify(c, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
 
 		<-c
 

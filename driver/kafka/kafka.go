@@ -4,103 +4,78 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"github.com/Shopify/sarama"
 	"github.com/kelseyhightower/envconfig"
 
-	"github.com/spf13/viper"
-
-	"github.com/1infras/go-kit/util/cert_utils"
-	"github.com/1infras/go-kit/util/file_utils"
+	"github.com/1infras/go-kit/util"
 )
 
-// Config of Kafka Cluster/Standalone
+// Config
 type Config struct {
-	Brokers               []string `json:"brokers" envconfig:"KAFKA_BROKERS"`
-	TLS                   bool     `json:"tls" envconfig:"KAFKA_TLS"`
-	Certificate           string   `json:"tls_client_cert" envconfig:"KAFKA_CERTIFICATE"`
-	PrivateKey            string   `json:"tls_client_key" envconfig:"KAFKA_PRIVATE_KEY"`
-	CertificateAuthority  string   `json:"tls_client_ca" envconfig:"KAFKA_CERTIFICATE_AUTHORITY"`
-	SkipVerifyCertificate bool     `json:"tls_skip_verify" envconfig:"KAFKA_SKIP_VERIFY_CERTIFICATE"`
+	Brokers               []string `mapstructure:"brokers" envconfig:"KAFKA_BROKERS"`
+	Version               string   `mapstructure:"version" envconfig:"KAFKA_VERSION"`
+	TLS                   bool     `mapstructure:"tls" envconfig:"KAFKA_TLS"`
+	Certificate           string   `mapstructure:"tls_client_cert" envconfig:"KAFKA_CERTIFICATE"`
+	PrivateKey            string   `mapstructure:"tls_client_key" envconfig:"KAFKA_PRIVATE_KEY"`
+	CertificateAuthority  string   `mapstructure:"tls_client_ca" envconfig:"KAFKA_CERTIFICATE_AUTHORITY"`
+	SkipVerifyCertificate bool     `mapstructure:"tls_skip_verify" envconfig:"KAFKA_SKIP_VERIFY_CERTIFICATE"`
 }
 
-// Connection of Kafka Cluster/Standalone
-type Connection struct {
-	Brokers []string    `json:"brokers"` // The list of kafka brokers
-	TLS     *tls.Config `json:"tls"`     // SSL configuration
+// Kafka
+type Kafka struct {
+	Brokers []string            // The list of kafka brokers
+	TLS     *tls.Config         // SSL configuration
+	Version sarama.KafkaVersion // Kafka version
 }
 
-// NewDefaultKafkaConfig of Kafka Clusters/Standalone
-func NewDefaultKafkaConfig() (*Config, error) {
-	var (
-		cfg *Config
-		err error
-	)
-
-	err = envconfig.Process("kafka", &cfg)
-	if err != nil {
-		cfg = &Config{
-			Brokers:               viper.GetStringSlice("kafka.servers"),
-			Certificate:           viper.GetString("kafka.tls_client_cert"),
-			PrivateKey:            viper.GetString("kafka.tls_client_key"),
-			CertificateAuthority:  viper.GetString("kafka.tls_client_ca"),
-			SkipVerifyCertificate: viper.GetBool("kafka.tls_skip_verify"),
+// ProcessConfig
+func ProcessConfig(cfg *Config) (*Config, error) {
+	if cfg == nil {
+		cfg = &Config{}
+		err := envconfig.Process("kafka", cfg)
+		if err != nil {
+			return nil, err
 		}
 	}
 
-	if cfg.TLS {
-		tlsClientCert, err := file_utils.GetAbsolutelyLocalFilePath(cfg.Certificate)
-		if err != nil {
-			return nil, err
-		}
-
-		cfg.Certificate = tlsClientCert
-
-		tlsClientKey, err := file_utils.GetAbsolutelyLocalFilePath(cfg.PrivateKey)
-		if err != nil {
-			return nil, err
-		}
-
-		cfg.PrivateKey = tlsClientKey
-
-		if cfg.CertificateAuthority != "" {
-			tlsClientCA, err := file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_ca"))
-			if err != nil {
-				return nil, err
-			}
-
-			cfg.CertificateAuthority = tlsClientCA
-		}
+	if cfg.Version == "" {
+		cfg.Version = sarama.V2_6_0_0.String()
 	}
 
 	return cfg, nil
 }
 
-// NewDefaultKafkaConnection with settings from viper
-func NewDefaultKafkaConnection(cfg *Config) (*Connection, error) {
-	if cfg == nil {
-		config, err := NewDefaultKafkaConfig()
-		if err != nil {
-			return nil, err
-		}
-
-		cfg = config
+// NewKafka
+func NewKafka(c *Config) (*Kafka, error) {
+	cfg, err := ProcessConfig(c)
+	if err != nil {
+		return nil, err
 	}
 
-	if len(cfg.Brokers) == 0 {
-		return nil, fmt.Errorf("kafka servers must be defined")
-	}
-
-	c := &Connection{
+	connection := &Kafka{
 		Brokers: cfg.Brokers,
 	}
 
 	if cfg.TLS {
-		tlsConfig, err := cert_utils.NewTLS(cfg.Certificate, cfg.PrivateKey, cfg.CertificateAuthority, cfg.SkipVerifyCertificate)
+		tlsConfig, err := util.NewTLS(&util.TLS{
+			CertificateFile:          cfg.Certificate,
+			PrivateKeyFile:           cfg.PrivateKey,
+			CertificateAuthorityFile: cfg.CertificateAuthority,
+			SkipVerifyCertificate:    cfg.SkipVerifyCertificate,
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		c.TLS = tlsConfig
+		connection.TLS = tlsConfig
 	}
 
-	return c, nil
+	version, err := sarama.ParseKafkaVersion(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("parse kafka verison has error: %v", err)
+	}
+
+	connection.Version = version
+
+	return connection, nil
 }

@@ -11,15 +11,11 @@ import (
 func TestProcessConfig(t *testing.T) {
 	os.Setenv("CONSUL_ENDPOINT", "http://localhost:8500")
 	os.Setenv("CONSUL_TOKEN", "123456")
-	os.Setenv("CONSUL_DATACENTER", "dc1")
-	os.Setenv("CONSUL_NAMESPACE", "ns1")
 
 	cfg, err := ProcessConfig(nil)
 	assert.Nil(t, err)
 	assert.Equal(t, "http://localhost:8500", cfg.Address)
 	assert.Equal(t, "123456", cfg.Token)
-	assert.Equal(t, "dc1", cfg.Datacenter)
-	assert.Equal(t, "ns1", cfg.Namespace)
 }
 
 func TestConsul(t *testing.T) {

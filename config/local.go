@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/1infras/go-kit/driver/config"
-	"github.com/1infras/go-kit/util/file_utils"
+	"github.com/1infras/go-kit/util"
 )
 
 func ReadLocalConfigFilesWithViper(filePaths []string, isMerge bool) error {
@@ -19,7 +19,7 @@ func ReadLocalConfigFilesWithViper(filePaths []string, isMerge bool) error {
 	for i := 0; i < length; i++ {
 		filePath := filePaths[i]
 
-		if !file_utils.ExistLocalFile(filePath) {
+		if !util.Exist(filePath) {
 			return fmt.Errorf("the file path: %s is not exist", filePath)
 		}
 
@@ -28,7 +28,7 @@ func ReadLocalConfigFilesWithViper(filePaths []string, isMerge bool) error {
 			continue
 		}
 
-		ext, err := file_utils.GetExtLocalFile(filePath)
+		ext, err := util.GetExtension(filePath)
 		if err != nil {
 			return err
 		}
@@ -37,7 +37,7 @@ func ReadLocalConfigFilesWithViper(filePaths []string, isMerge bool) error {
 			return fmt.Errorf("the file path: %s is not support", filePath)
 		}
 
-		content, err := file_utils.ReadLocalFile(filePath)
+		content, err := util.Read(filePath)
 		if err != nil {
 			return err
 		}

@@ -2,7 +2,7 @@ package util
 
 import "context"
 
-// GetContextWithCancel --
+// GetContextWithCancel
 func GetContextWithCancel(parent context.Context) (context.Context, func()) {
 	return context.WithCancel(parent)
 }

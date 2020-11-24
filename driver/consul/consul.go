@@ -29,11 +29,10 @@ type KV interface {
 func ProcessConfig(cfg *Config) (*api.Config, error) {
 	if cfg == nil {
 		cfg = &Config{}
-	}
-
-	err := envconfig.Process("consul", cfg)
-	if err != nil {
-		return nil, err
+		err := envconfig.Process("consul", cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	config := &api.Config{}
