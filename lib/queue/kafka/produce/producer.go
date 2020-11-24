@@ -264,17 +264,21 @@ func (_this *Producer) sync() {
 				return
 			case <-_this.asyncProducer.p.Successes():
 				atomic.AddUint32(&_this.stat.totalSuccesses, 1)
-			case err := <-_this.asyncProducer.p.Errors():
+			case err, ok := <-_this.asyncProducer.p.Errors():
 				atomic.AddUint32(&_this.stat.totalErrors, 1)
-				msg, _ := err.Msg.Value.Encode()
-				key, _ := err.Msg.Key.Encode()
-				logger.Error("produce message to kafka has failed",
-					zap.String("error", err.Error()),
-					zap.String("topic", err.Msg.Topic),
-					zap.Int64("offset", err.Msg.Offset),
-					zap.Int32("partition", err.Msg.Partition),
-					zap.String("key", string(key)),
-					zap.String("value", string(msg)))
+				if ok {
+					if err.Msg != nil {
+						msg, _ := err.Msg.Value.Encode()
+						key, _ := err.Msg.Key.Encode()
+						logger.Error("produce message to kafka has failed",
+							zap.String("error", err.Error()),
+							zap.String("topic", err.Msg.Topic),
+							zap.Int64("offset", err.Msg.Offset),
+							zap.Int32("partition", err.Msg.Partition),
+							zap.String("key", string(key)),
+							zap.String("value", string(msg)))
+					}
+				}
 			}
 		}
 	}(_this.context)

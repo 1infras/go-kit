@@ -105,7 +105,7 @@ services:
     ports:
       - 8500:8500
       - 8600:8600/udp
-    command: agent -server -ui -bind 0.0.0.0 -client 0.0.0.0 -data-dir /consul/data -node=consul-1
+    command: agent -server -ui -bind 0.0.0.0 -client 0.0.0.0 -data-dir /consul/data -node=consul-1 -bootstrap-expect 1
     networks:
       - go-kit
     volumes:
