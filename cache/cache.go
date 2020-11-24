@@ -6,7 +6,6 @@ import (
 	"github.com/1infras/go-kit/lib/cache/lru"
 	"github.com/1infras/go-kit/lib/cache/onecache"
 	"github.com/1infras/go-kit/tracing"
-	"github.com/1infras/go-kit/tracing/apmlru"
 	"github.com/1infras/go-kit/tracing/hook"
 )
 
@@ -17,7 +16,7 @@ func NewLRU(size int, expiration time.Duration) (lru.Client, error) {
 	}
 
 	if tracing.Enabled {
-		c.AddHook(apmlru.NewHook())
+		c.AddHook(hook.NewHook("cache.lru"))
 	}
 
 	return c, err
@@ -30,7 +29,7 @@ func NewOneCache(opts ...onecache.ClientOptionFunc) (onecache.OneCache, error) {
 	}
 
 	if tracing.Enabled {
-		c.AddHook(hook.NewHook())
+		c.AddHook(hook.NewHook("cache.one_cache"))
 	}
 
 	return c, nil

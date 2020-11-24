@@ -15,6 +15,7 @@ import (
 type testHook struct{}
 
 func (*testHook) BeforeProcess(ctx context.Context, cmdName string) context.Context {
+	// nolint:staticcheck
 	ctx = context.WithValue(ctx, "start_time", time.Now().Unix())
 	return ctx
 }

@@ -34,7 +34,8 @@ type Produce interface {
 	Produce(ctx context.Context, message *Message) (*Message, error)
 	Close() error
 	AddHook(hook common.HookProcess)
-	Report(ctx context.Context) string
+	GetStats() string
+	ResetStats()
 }
 
 type ProducerOptionFunc func(*Producer) error
@@ -56,6 +57,10 @@ type Producer struct {
 	hook *common.Hook
 }
 
+func (_this *Producer) ResetStats() {
+	_this.stat.reset()
+}
+
 func (_this *Producer) Close() error {
 	if _this.produceMode == AsyncMode {
 		return _this.asyncProducer.close()
@@ -75,12 +80,8 @@ func (_this *Producer) Produce(ctx context.Context, message *Message) (m *Messag
 	return
 }
 
-func (_this *Producer) Report(ctx context.Context) (result string) {
-	_this.hook.Process(ctx, func() {
-		result = _this.report()
-	}, "report")
-
-	return
+func (_this *Producer) GetStats() string {
+	return _this.report()
 }
 
 // CreateProducer

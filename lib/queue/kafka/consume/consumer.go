@@ -20,7 +20,7 @@ import (
 
 type InitialOffsetMode int
 type BalanceStrategyMode int
-type ConsumeHandler func(message []byte) ConsumeStatus
+type Handler func(message []byte) ConsumeStatus
 
 const (
 	Oldest InitialOffsetMode = iota
@@ -34,9 +34,10 @@ const (
 )
 
 type Consume interface {
-	SetConsumeHandler(ConsumeHandler)
+	SetConsumeHandler(Handler)
 	Run()
-	Report() string
+	GetStats() string
+	ResetStats()
 	AddHook(hook common.HookProcess)
 }
 
@@ -49,7 +50,7 @@ type Consumer struct {
 	initialOffsetMode   InitialOffsetMode
 	balanceStrategyMode BalanceStrategyMode
 
-	consumeHandler ConsumeHandler
+	consumeHandler Handler
 
 	topic            string
 	group            string
@@ -63,15 +64,19 @@ type Consumer struct {
 	hook *common.Hook
 }
 
+func (_this *Consumer) ResetStats() {
+	_this.stat.reset()
+}
+
 func (_this *Consumer) AddHook(hook common.HookProcess) {
 	_this.hook.AddHook(hook)
 }
 
-func (_this *Consumer) Report() string {
+func (_this *Consumer) GetStats() string {
 	return _this.report()
 }
 
-func (_this *Consumer) SetConsumeHandler(h ConsumeHandler) {
+func (_this *Consumer) SetConsumeHandler(h Handler) {
 	_this.consumeHandler = h
 }
 

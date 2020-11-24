@@ -17,6 +17,7 @@ import (
 type testHook struct{}
 
 func (*testHook) BeforeProcess(ctx context.Context, cmdName string) context.Context {
+	// nolint:staticcheck
 	ctx = context.WithValue(ctx, "start_time", time.Now().Unix())
 	return ctx
 }
@@ -63,7 +64,7 @@ func TestSyncProduce(t *testing.T) {
 	assert.NotEqual(t, int64(999), m.Offset)
 	assert.Equal(t, now.String(), m.Timestamp.String())
 
-	t.Logf("%v", producer.Report(ctx))
+	t.Logf("%v", producer.GetStats())
 	err = producer.Close()
 	assert.Nil(t, err)
 }
@@ -98,7 +99,7 @@ func TestBulkProduce(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
-	t.Logf("%v", producer.Report(ctx))
+	t.Logf("%v", producer.GetStats())
 	err = producer.Close()
 	assert.Nil(t, err)
 }
@@ -141,7 +142,7 @@ func TestAsyncProducer(t *testing.T) {
 	assert.NotEqual(t, int64(999), m.Offset)
 	assert.Equal(t, now.String(), m.Timestamp.String())
 
-	t.Logf("%v", producer.Report(ctx))
+	t.Logf("%v", producer.GetStats())
 	err = producer.Close()
 	assert.Nil(t, err)
 }

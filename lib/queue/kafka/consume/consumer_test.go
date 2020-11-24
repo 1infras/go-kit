@@ -17,6 +17,7 @@ import (
 type testHook struct{}
 
 func (*testHook) BeforeProcess(ctx context.Context, cmdName string) context.Context {
+	// nolint:staticcheck
 	ctx = context.WithValue(ctx, "start_time", time.Now().Unix())
 	return ctx
 }
@@ -57,7 +58,7 @@ func TestConsume(t *testing.T) {
 		}
 		logger.Info("consumed success", zap.String("result", msg))
 
-		t.Logf("report: %s", c.Report())
+		t.Logf("report: %s", c.GetStats())
 		return Consumed
 	})
 
