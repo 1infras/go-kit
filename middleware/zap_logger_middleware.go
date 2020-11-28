@@ -9,25 +9,25 @@ import (
 
 const timeFormat = time.RFC3339
 
-//ZapLoggerMiddleware -
+// ZapLoggerMiddleware -
 type ZapLoggerMiddleware struct{}
 
-//NewZapLoggerMiddleware - New a logger middleware to trace the HTTP request
+// NewZapLoggerMiddleware - New a logger middleware to trace the HTTP request
 func NewZapLoggerMiddleware() *ZapLoggerMiddleware {
 	return &ZapLoggerMiddleware{}
 }
 
-func (m *ZapLoggerMiddleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	//Start time
+func (*ZapLoggerMiddleware) ServeHTTP(rw http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	// Start time
 	start := time.Now()
-	//Next
+	// Next
 	next(rw, r)
-	//End time
+	// End time
 	end := time.Now()
-	//Calculate Latency
+	// Calculate Latency
 	latency := end.Sub(start)
 
-	//Log the result
+	// Log the result
 	zap.L().Info(r.URL.Path,
 		zap.String("host", r.Host),
 		zap.String("method", r.Method),

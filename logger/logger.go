@@ -1,38 +1,38 @@
 package logger
 
 import (
-	"context"
 	"sync"
 
-	"go.elastic.co/apm/module/apmzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/1infras/go-kit/tracing"
 )
 
-//LogLevel -
+// LogLevel -
 type LogLevel string
 
 const (
-	//Panic -
+	// Panic -
 	PanicLevel LogLevel = "panic"
-	//Fatal -
+	// Fatal -
 	FatalLevel = "fatal"
-	//Error -
+	// Error -
 	ErrorLevel = "error"
-	//Warn -
+	// Warn -
 	WarnLevel = "warn"
-	//Info -
+	// Info -
 	InfoLevel = "info"
-	//Debug -
+	// Debug -
 	DebugLevel = "debug"
 )
 
 var (
-	//Ensure this logger only created at once time
+	// Ensure this logger only created at once time
 	syncOne sync.Once
 )
 
-//GetLogLevel - Transform logger level to zapcore level
+// GetLogLevel - Transform logger level to zapcore level
 func GetLogLevel(lvl LogLevel) zapcore.Level {
 	zapLevel := zap.DebugLevel
 
@@ -54,7 +54,7 @@ func GetLogLevel(lvl LogLevel) zapcore.Level {
 	return zapLevel
 }
 
-//InitLogger - Init a logger with logger level
+// InitLogger - Init a logger with logger level
 func InitLogger(lvl LogLevel) {
 	syncOne.Do(func() {
 		zapLevel := GetLogLevel(lvl)
@@ -79,116 +79,61 @@ func InitLogger(lvl LogLevel) {
 			panic(err)
 		}
 
-		logger.WithOptions(zap.WrapCore((&apmzap.Core{}).WrapCore))
+		if tracing.Enabled {
+			tracing.WrapZapLogger(logger)
+		}
 
 		zap.ReplaceGlobals(logger)
 		zap.RedirectStdLog(logger)
 	})
 }
 
-func apmTraceContextWrapper(ctx context.Context) []zapcore.Field {
-	if ctx != nil {
-		return apmzap.TraceContext(ctx)
-	}
-	return apmzap.TraceContext(context.Background())
+// Info -
+func Info(message string, fields ...zap.Field) {
+	zap.L().Info(message, fields...)
 }
 
-//Info -
-func Info(message string) {
-	zap.L().Info(message)
+// Warn -
+func Warn(message string, fields ...zap.Field) {
+	zap.L().Warn(message, fields...)
 }
 
-//Warn -
-func Warn(message string) {
-	zap.L().Warn(message)
+// Error -
+func Error(message string, fields ...zap.Field) {
+	zap.L().Error(message, fields...)
 }
 
-//Error -
-func Error(message string) {
-	zap.L().Error(message)
+// Panic -
+func Panic(message string, fields ...zap.Field) {
+	zap.L().Panic(message, fields...)
 }
 
-//Panic -
-func Panic(message string) {
-	zap.L().Panic(message)
+// Debug -
+func Debug(message string, fields ...zap.Field) {
+	zap.L().Debug(message, fields...)
 }
 
-//Debug -
-func Debug(message string) {
-	zap.L().Debug(message)
-}
-
-//Infot - Info with APM tracing
-func Infot(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Info(message, fields...)
-}
-
-//Warnt - Warn with APM tracing
-func Warnt(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Warn(message, fields...)
-}
-
-//Errort - Error with APM tracing
-func Errort(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Error(message, fields...)
-}
-
-//Debugt - Debug with APM tracing
-func Debugt(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Debug(message, fields...)
-}
-
-//Panict - Panic with APM tracing
-func Panict(ctx context.Context, message string, fields ...zap.Field) {
-	zap.L().With(apmTraceContextWrapper(ctx)...).Panic(message, fields...)
-}
-
-//Infof - Info with format
+// Infof -
 func Infof(message string, args ...interface{}) {
 	zap.S().Infof(message, args...)
 }
 
-//Warnf - Warn with format
+// Warnf -
 func Warnf(message string, args ...interface{}) {
 	zap.S().Warnf(message, args...)
 }
 
-//Errorf - Error with format
+// Errorf -
 func Errorf(message string, args ...interface{}) {
 	zap.S().Errorf(message, args...)
 }
 
-//Debugf - Debug with format
+// Debugf -
 func Debugf(message string, args ...interface{}) {
 	zap.S().Debugf(message, args...)
 }
 
-//Panicf - Panic with format
+// Panicf -
 func Panicf(message string, args ...interface{}) {
 	zap.S().Panicf(message, args...)
-}
-
-//Infow - Info with sugared
-func Infow(message string, keyAndValues ...interface{}) {
-	zap.S().Infow(message, keyAndValues...)
-}
-
-//Warnw - Warn with sugared
-func Warnw(message string, keyAndValues ...interface{}) {
-	zap.S().Warnw(message, keyAndValues...)
-}
-
-//Errorw - Error with sugared
-func Errorw(message string, keyAndValues ...interface{}) {
-	zap.S().Errorw(message, keyAndValues...)
-}
-
-//Debugw - Debug with sugared
-func Debugw(message string, keyAndValues ...interface{}) {
-	zap.S().Debugw(message, keyAndValues...)
-}
-
-//Panicw - Panic with sugared
-func Panicw(message string, keyAndValues ...interface{}) {
-	zap.S().Panicw(message, keyAndValues...)
 }

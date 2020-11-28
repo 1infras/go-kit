@@ -1,0 +1,4 @@
+elasticsearch:
+  url: http://localhost:9200
+  secure: false
+  api_key: "123456"

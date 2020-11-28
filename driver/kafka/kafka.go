@@ -4,56 +4,78 @@ import (
 	"crypto/tls"
 	"fmt"
 
-	"github.com/1infras/go-kit/util/cert_utils"
-	"github.com/1infras/go-kit/util/file_utils"
-	"github.com/spf13/viper"
+	"github.com/Shopify/sarama"
+	"github.com/kelseyhightower/envconfig"
+
+	"github.com/1infras/go-kit/util"
 )
 
-//Connection of Kafka Cluster/Standalone
-type Connection struct {
-	Brokers []string    `json:"brokers"` //The list of kafka brokers
-	TLS     *tls.Config `json:"tls"`     //SSL configuration
+// Config
+type Config struct {
+	Brokers               []string `mapstructure:"brokers" envconfig:"KAFKA_BROKERS"`
+	Version               string   `mapstructure:"version" envconfig:"KAFKA_VERSION"`
+	TLS                   bool     `mapstructure:"tls" envconfig:"KAFKA_TLS"`
+	Certificate           string   `mapstructure:"tls_client_cert" envconfig:"KAFKA_CERTIFICATE"`
+	PrivateKey            string   `mapstructure:"tls_client_key" envconfig:"KAFKA_PRIVATE_KEY"`
+	CertificateAuthority  string   `mapstructure:"tls_client_ca" envconfig:"KAFKA_CERTIFICATE_AUTHORITY"`
+	SkipVerifyCertificate bool     `mapstructure:"tls_skip_verify" envconfig:"KAFKA_SKIP_VERIFY_CERTIFICATE"`
 }
 
-//NewDefaultKafkaConnection with settings from viper
-func NewDefaultKafkaConnection() (*Connection, error) {
-	servers := viper.GetStringSlice("kafka.servers")
-	if len(servers) == 0 {
-		return nil, fmt.Errorf("kafka servers must be defined")
+// Kafka
+type Kafka struct {
+	Brokers []string            // The list of kafka brokers
+	TLS     *tls.Config         // SSL configuration
+	Version sarama.KafkaVersion // Kafka version
+}
+
+// ProcessConfig
+func ProcessConfig(cfg *Config) (*Config, error) {
+	if cfg == nil {
+		cfg = &Config{}
+		err := envconfig.Process("kafka", cfg)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	c := &Connection{
-		Brokers: servers,
+	if cfg.Version == "" {
+		cfg.Version = sarama.V2_6_0_0.String()
 	}
 
-	if viper.GetBool("kafka.tls") {
-		tlsClientCert, err := file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_cert"))
+	return cfg, nil
+}
+
+// NewKafka
+func NewKafka(c *Config) (*Kafka, error) {
+	cfg, err := ProcessConfig(c)
+	if err != nil {
+		return nil, err
+	}
+
+	connection := &Kafka{
+		Brokers: cfg.Brokers,
+	}
+
+	if cfg.TLS {
+		tlsConfig, err := util.NewTLS(&util.TLS{
+			CertificateFile:          cfg.Certificate,
+			PrivateKeyFile:           cfg.PrivateKey,
+			CertificateAuthorityFile: cfg.CertificateAuthority,
+			SkipVerifyCertificate:    cfg.SkipVerifyCertificate,
+		})
 		if err != nil {
 			return nil, err
 		}
 
-		tlsClientKey, err := file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_key"))
-		if err != nil {
-			return nil, err
-		}
-
-		tlsClientCA := viper.GetString("kafka.tls_client_ca")
-		tlsSkipVerify := viper.GetBool("kafka.tls_skip_verify")
-
-		if tlsClientCA != "" {
-			tlsClientCA, err = file_utils.GetAbsolutelyLocalFilePath(viper.GetString("kafka.tls_client_ca"))
-			if err != nil {
-				return nil, err
-			}
-		}
-
-		tlsConfig, err := cert_utils.NewTLS(tlsClientCert, tlsClientKey, tlsClientCA, tlsSkipVerify)
-		if err != nil {
-			return nil, err
-		}
-
-		c.TLS = tlsConfig
+		connection.TLS = tlsConfig
 	}
 
-	return c, nil
+	version, err := sarama.ParseKafkaVersion(cfg.Version)
+	if err != nil {
+		return nil, fmt.Errorf("parse kafka verison has error: %v", err)
+	}
+
+	connection.Version = version
+
+	return connection, nil
 }
