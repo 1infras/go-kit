@@ -45,6 +45,8 @@ type Producer struct {
 	cancelFunc context.CancelFunc
 
 	produceMode     ProducerMode
+	rackID          string
+	clientID        string
 	partitionerMode PartitionerMode
 	requireAsks     bool
 
@@ -115,6 +117,14 @@ func CreateProducer(client *kafka.Kafka, options ...ProducerOptionFunc) (Produce
 	cfg.Producer.Return.Successes = true
 	cfg.Producer.Return.Errors = true
 	cfg.Producer.CompressionLevel = 6
+
+	if p.rackID != "" {
+		cfg.RackID = p.rackID
+	}
+
+	if p.clientID != "" {
+		cfg.ClientID = p.clientID
+	}
 
 	if client.TLS != nil {
 		cfg.Net.TLS.Enable = true
@@ -198,6 +208,26 @@ func SetTopic(topic string) ProducerOptionFunc {
 func SetRequireAsks() ProducerOptionFunc {
 	return func(p *Producer) error {
 		p.requireAsks = true
+		return nil
+	}
+}
+
+func SetRackID(rackID string) ProducerOptionFunc {
+	return func(p *Producer) error {
+		if rackID == "" {
+			return fmt.Errorf("rack id must be defined")
+		}
+		p.rackID = rackID
+		return nil
+	}
+}
+
+func SetClientID(clientID string) ProducerOptionFunc {
+	return func(p *Producer) error {
+		if clientID == "" {
+			return fmt.Errorf("rack id must be defined")
+		}
+		p.clientID = clientID
 		return nil
 	}
 }
